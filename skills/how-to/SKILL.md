@@ -1,5 +1,5 @@
 ---
-name: solo-flow:how-to
+name: how-to
 description: >
   Use when the user asks how to use solo-flow, how to set it up, what its
   workflow looks like, what commands it has, or how to get started — or asks

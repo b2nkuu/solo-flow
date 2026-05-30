@@ -1,5 +1,5 @@
 ---
-name: solo-flow:assistant
+name: assistant
 description: >
   Use when the user talks about their own tasks, ideas, work items, what to
   work on, finishing or blocking work, or reviewing their week — in either
