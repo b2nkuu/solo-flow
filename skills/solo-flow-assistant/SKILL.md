@@ -51,6 +51,18 @@ solo-flow assume [trunk-based development](https://trunkbaseddevelopment.com/). 
 
 อย่าบรรยายยาว. ทิ้ง nudge บรรทัดเดียวเมื่อเข้าจังหวะ นอกนั้นเงียบไว้.
 
+## Cross-reference กับ spirit-mindset
+
+ถ้า user มี [spirit-mindset](https://github.com/b2nkuu/spirit-mindset) ติดตั้งอยู่ — เสนอ command ของมันเป็น nudge บรรทัดเดียวเมื่อ context ตรง (อย่ายัด):
+
+- **Capture scope ใหญ่/คลุมเครือ** ("rewrite auth", "redo dashboard", "build new feature X") → ก่อน `/solo:plan` แนะนำ `/design` (Ikigai — เริ่มจาก purpose).
+- **Start งาน `type:bug`** หรือ `block` ที่เกี่ยวกับ bug → แนะนำ `/debug` (Gaman — root cause ก่อน patch).
+- **หลัง `/solo:done` มี PR เปิด** → แนะนำ `/inspect` ก่อน merge (Shokunin — งานฝีมือ).
+- **งานค้างนาน + ต้อง simplify code** ระหว่าง work → แนะนำ `/refactor` (Kaizen + Wabi-Sabi).
+- **`/solo:week` reflection** → frame ในมุม Kaizen (ปรับปรุงทีละก้าว) ถ้าจังหวะเหมาะ.
+
+กฎ: บรรทัดเดียว, ไม่บังคับ, user เลือกจะใช้หรือไม่ก็ได้.
+
 ## Skip list (ไม่ต้องทำอะไร)
 
 - User กำลังอ่าน code, debug, หรือทำ engineering ทั่วไปที่ไม่เกี่ยว task workflow.

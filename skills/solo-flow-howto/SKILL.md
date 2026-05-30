@@ -125,7 +125,24 @@ solo-flow ใช้ [trunk-based development](https://trunkbaseddevelopment.com/
 
 ปรับใน `.solo/config.yml` ที่ `trunk.max_branch_age_days` (default `2`; `0` = ปิด).
 
+## ใช้คู่กับ spirit-mindset
+
+ถ้าติดตั้ง [spirit-mindset](https://github.com/b2nkuu/spirit-mindset) ด้วย จะได้ workflow เต็มขึ้น — solo-flow จัดการ task, spirit-mindset เพิ่มชั้น philosophy ในแต่ละ step:
+
+| สถานการณ์ | solo-flow | spirit-mindset |
+|---|---|---|
+| ไอเดียใหม่ scope ใหญ่ | `/solo:capture` | `/design` (Ikigai — เริ่มจาก purpose) |
+| Triage Inbox | `/solo:plan` | — |
+| Start งาน `type:bug` | `/solo:start <n>` | `/debug` (Gaman — root cause) |
+| Block เพราะ bug | `/solo:block <n>` | `/debug` |
+| ระหว่างทำ code เริ่มเลอะ | `/solo:note <n>` | `/refactor` (Kaizen) |
+| Done + เปิด PR | `/solo:done <n>` | `/inspect` (Shokunin — review งานฝีมือ) |
+| Weekly review | `/solo:week` | reflect ด้วย Kaizen mindset |
+
+ทั้งคู่ใช้คนละ namespace ไม่ชนกัน. ใช้แค่ solo-flow อย่างเดียวก็ทำงานได้เต็ม.
+
 ## ไปต่อ
 
 - Reference เต็มและ config: `README.md` ของ plugin
 - Natural-language mode: skill `solo-flow-assistant` activate อัตโนมัติเวลา user คุยเรื่อง task (เช่น "อยากเพิ่ม dark mode" → จะเสนอ capture)
+- spirit-mindset: https://github.com/b2nkuu/spirit-mindset
