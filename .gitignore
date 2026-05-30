@@ -1,0 +1,15 @@
+# macOS
+.DS_Store
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Local config (this plugin's per-project config lives in user repos, not here)
+.solo/
+
+# Temp files used by command bodies
+/tmp/solo-body

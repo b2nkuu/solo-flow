@@ -77,7 +77,15 @@ gh issue close <n> --repo <owner/repo>
 
 Read `trunk.name` from `.solo/config.yml` (default `main`) and the issue metadata `branch:` field.
 
-If a branch is recorded and the current local branch matches it, **offer** (don't force) to ship it back to trunk:
+**Guards — skip the PR offer entirely if any of these fail:**
+
+- Not inside a git work tree (`git rev-parse --is-inside-work-tree` is not `true`).
+- No `branch:` recorded in the issue metadata.
+- Current local branch (`git branch --show-current`) does not match the recorded branch — the user is somewhere else, don't surprise them.
+- Current branch IS the trunk (`git branch --show-current` == `trunk.name`) — there's nothing to PR.
+- No `origin` remote exists (`git remote get-url origin` fails) — local-only repo, can't push.
+
+If all guards pass, offer (don't force):
 
 ```
 Branch <name> is on this issue. Open a PR to <trunk>? [Y/n]
@@ -92,7 +100,13 @@ gh pr create --base <trunk> --head <branch> \
   --body "Closes #<n>"
 ```
 
-If the user declines or there is no branch, skip silently. The principle: short-lived branches → merged back to trunk fast, not left dangling.
+If `gh pr create` fails because a PR already exists for the branch, surface the existing URL instead of erroring out:
+
+```bash
+gh pr view --json url -q .url 2>/dev/null
+```
+
+The principle: short-lived branches → merged back to trunk fast, not left dangling.
 
 ### 9. Confirm
 
