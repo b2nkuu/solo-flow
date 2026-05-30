@@ -1,0 +1,18 @@
+{
+  "name": "solo-flow",
+  "version": "0.1.0",
+  "description": "Lightweight task management for solopreneurs using GitHub Issues, from inside Claude Code.",
+  "author": {
+    "name": "B2NKUU",
+    "email": "ban.kuu@yahoo.com"
+  },
+  "keywords": [
+    "task-management",
+    "github",
+    "issues",
+    "solopreneur",
+    "productivity",
+    "trunk-based-development"
+  ],
+  "license": "MIT"
+}
