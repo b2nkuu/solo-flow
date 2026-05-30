@@ -1,27 +1,27 @@
 ---
 name: how-to
 description: >
-  Use when the user asks how to use solo-flow, how to set it up, what its
+  Use when the user asks how to use solo, how to set it up, what its
   workflow looks like, what commands it has, or how to get started — or asks
-  the same in Thai ("ใช้ solo-flow ยังไง", "solo-flow ทำงานยังไง",
-  "วิธีใช้ solo-flow", "solo-flow มี command อะไรบ้าง", "เริ่มใช้ solo-flow",
-  "setup solo-flow"). Surfaces the install path, daily workflow, and command
+  the same in Thai ("ใช้ solo ยังไง", "solo ทำงานยังไง",
+  "วิธีใช้ solo", "solo มี command อะไรบ้าง", "เริ่มใช้ solo",
+  "setup solo"). Surfaces the install path, daily workflow, and command
   cheat-sheet.
 ---
 
-# Solo-Flow How-To
+# Solo How-To
 
-คู่มือใช้งาน plugin `solo-flow` แบบสั้น สแกนได้เร็ว. ถ้า user แค่จะ *ทำงาน* (capture ไอเดีย, start งาน, ship) ให้ใช้ skill `solo-flow-assistant` แทน — skill นี้คือคู่มือ ไม่ใช่ coach.
+คู่มือใช้งาน plugin `solo` แบบสั้น สแกนได้เร็ว. ถ้า user แค่จะ *ทำงาน* (capture ไอเดีย, start งาน, ship) ให้ใช้ skill `solo-assistant` แทน — skill นี้คือคู่มือ ไม่ใช่ coach.
 
 ## คืออะไร
 
-solo-flow เปลี่ยน Claude Code เป็น task manager สำหรับ solopreneur โดยใช้ GitHub Issues เป็น backend. Capture ไอเดีย → ทำงาน → ship → review รายสัปดาห์ — ทำหมดจาก terminal ไม่ต้องเปิด browser. State อยู่ใน Issues + labels, auth ใช้ `gh`.
+solo เปลี่ยน Claude Code เป็น task manager สำหรับ solopreneur โดยใช้ GitHub Issues เป็น backend. Capture ไอเดีย → ทำงาน → ship → review รายสัปดาห์ — ทำหมดจาก terminal ไม่ต้องเปิด browser. State อยู่ใน Issues + labels, auth ใช้ `gh`.
 
 ## Prerequisites
 
 - [`gh` CLI](https://cli.github.com) ติดตั้งและ login (`gh auth status` ต้องผ่าน)
 - GitHub repository สำหรับ project
-- โหลด `solo-flow` plugin ใน Claude Code แล้ว — ดู `README.md` ของ plugin สำหรับวิธี install
+- โหลด `solo` plugin ใน Claude Code แล้ว — ดู `README.md` ของ plugin สำหรับวิธี install
 
 ## Workflow รายวัน
 
@@ -116,7 +116,7 @@ Note ธรรมดาไป comment thread. Note ที่ขึ้น `[decis
 
 ## Trunk-based principles (ฝังไว้ใน plugin)
 
-solo-flow ใช้ [trunk-based development](https://trunkbaseddevelopment.com/):
+solo ใช้ [trunk-based development](https://trunkbaseddevelopment.com/):
 
 - **Branch จาก trunk เสมอ** — `/solo:start` pull trunk ล่าสุดก่อน branch
 - **Branch อายุสั้น (≤ 2 วัน)** — `/solo:today` และ `/solo:status` เตือนเมื่องาน in-progress ค้างนาน
@@ -127,9 +127,9 @@ solo-flow ใช้ [trunk-based development](https://trunkbaseddevelopment.com/
 
 ## ใช้คู่กับ spirit-mindset
 
-ถ้าติดตั้ง [spirit-mindset](https://github.com/b2nkuu/spirit-mindset) ด้วย จะได้ workflow เต็มขึ้น — solo-flow จัดการ task, spirit-mindset เพิ่มชั้น philosophy ในแต่ละ step:
+ถ้าติดตั้ง [spirit-mindset](https://github.com/b2nkuu/spirit-mindset) ด้วย จะได้ workflow เต็มขึ้น — solo จัดการ task, spirit-mindset เพิ่มชั้น philosophy ในแต่ละ step:
 
-| สถานการณ์ | solo-flow | spirit-mindset |
+| สถานการณ์ | solo | spirit-mindset |
 |---|---|---|
 | ไอเดียใหม่ scope ใหญ่ | `/solo:capture` | `/design` (Ikigai — เริ่มจาก purpose) |
 | Triage Inbox | `/solo:plan` | — |
@@ -139,10 +139,10 @@ solo-flow ใช้ [trunk-based development](https://trunkbaseddevelopment.com/
 | Done + เปิด PR | `/solo:done <n>` | `/inspect` (Shokunin — review งานฝีมือ) |
 | Weekly review | `/solo:week` | reflect ด้วย Kaizen mindset |
 
-ทั้งคู่ใช้คนละ namespace ไม่ชนกัน. ใช้แค่ solo-flow อย่างเดียวก็ทำงานได้เต็ม.
+ทั้งคู่ใช้คนละ namespace ไม่ชนกัน. ใช้แค่ solo อย่างเดียวก็ทำงานได้เต็ม.
 
 ## ไปต่อ
 
 - Reference เต็มและ config: `README.md` ของ plugin
-- Natural-language mode: skill `solo-flow-assistant` activate อัตโนมัติเวลา user คุยเรื่อง task (เช่น "อยากเพิ่ม dark mode" → จะเสนอ capture)
+- Natural-language mode: skill `solo-assistant` activate อัตโนมัติเวลา user คุยเรื่อง task (เช่น "อยากเพิ่ม dark mode" → จะเสนอ capture)
 - spirit-mindset: https://github.com/b2nkuu/spirit-mindset

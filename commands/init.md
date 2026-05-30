@@ -1,5 +1,5 @@
 ---
-description: Initialize solo-flow for this repository (labels + config)
+description: Initialize solo for this repository (labels + config)
 allowed-tools: [Bash]
 ---
 
@@ -72,7 +72,7 @@ git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/orig
 Use the detected name as `trunk.name`.
 
 ```yaml
-# solo-flow configuration
+# solo configuration
 version: 1
 
 repo: "<owner/repo>"
@@ -116,7 +116,7 @@ gh api repos/<owner/repo>/milestones -f title="<name>" 2>/dev/null || true
 ### 6. Confirm
 
 ```
-✅ solo-flow initialized for <owner/repo>
+✅ solo initialized for <owner/repo>
    labels: 18 created/updated
    config: .solo/config.yml
    [milestones: <list>]

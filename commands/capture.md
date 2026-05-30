@@ -89,7 +89,7 @@ gh label create "<name>" --color "<hex>" --force --repo <owner/repo>
 
 
 ---
-<!-- solo-flow:metadata
+<!-- solo:metadata
 created: <YYYY-MM-DD>
 started:
 completed:
@@ -98,7 +98,7 @@ branch:
 -->
 ```
 
-Preserve the `<!-- solo-flow:metadata ... -->` comment exactly as shown — other commands parse it.
+Preserve the `<!-- solo:metadata ... -->` comment exactly as shown — other commands parse it.
 
 ### 6. Create the issue
 

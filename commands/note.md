@@ -36,7 +36,7 @@ If the text starts with `[decision]`, ALSO append the same line to the issue bod
 
 1. Fetch body: `gh issue view <n> --repo <owner/repo> --json body -q .body > /tmp/solo-body`
 2. Append a bullet under `## Notes`:
-   - If `## Notes` already has content, add the new bullet at the end of that section (immediately before the next `---` or `<!-- solo-flow:metadata` line, whichever comes first).
+   - If `## Notes` already has content, add the new bullet at the end of that section (immediately before the next `---` or `<!-- solo:metadata` line, whichever comes first).
    - Format: `- <YYYY-MM-DD>: [decision] <rest of text>`
 3. `gh issue edit <n> --repo <owner/repo> --body-file /tmp/solo-body`
 
@@ -50,8 +50,8 @@ For non-decision notes, **do not** edit the body — comment-only is sufficient.
 
 ## Implementation note
 
-Body-edit fragility (regex matching `## Notes` section) is the main risk here. If the body cannot be parsed safely (no `## Notes` heading, or no `<!-- solo-flow:metadata` block), fall back to comment-only and warn the user once:
+Body-edit fragility (regex matching `## Notes` section) is the main risk here. If the body cannot be parsed safely (no `## Notes` heading, or no `<!-- solo:metadata` block), fall back to comment-only and warn the user once:
 
 ```
-✅ Added comment to #<n> (body mirror skipped — issue not in solo-flow format)
+✅ Added comment to #<n> (body mirror skipped — issue not in solo format)
 ```

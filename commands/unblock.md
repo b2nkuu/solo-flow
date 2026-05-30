@@ -29,7 +29,7 @@ gh issue view <n> --repo <owner/repo> --json number,title,body,labels
 
 ### 3. Decide restore status
 
-Parse the `<!-- solo-flow:metadata ... -->` block from the body and read the `started:` field.
+Parse the `<!-- solo:metadata ... -->` block from the body and read the `started:` field.
 
 - If `started:` has a value → restore to `status:in-progress`.
 - Else → restore to `status:planned`.

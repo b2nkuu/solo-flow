@@ -44,7 +44,7 @@ gh issue edit <n> --repo <owner/repo> \
 
 ### 4. Update metadata
 
-Fetch the body, find the `<!-- solo-flow:metadata ... -->` comment, and set `started: <today>` (only overwrite if the field is empty). Write back:
+Fetch the body, find the `<!-- solo:metadata ... -->` comment, and set `started: <today>` (only overwrite if the field is empty). Write back:
 
 ```bash
 gh issue view <n> --repo <owner/repo> --json body -q .body > /tmp/solo-body
@@ -56,7 +56,7 @@ Preserve the rest of the body verbatim.
 
 ### 5. Branch creation (optional, trunk-based)
 
-solo-flow follows [trunk-based development](https://trunkbaseddevelopment.com/): branches are **short-lived** (target ≤ 2 days), scoped small, and merged back to `trunk` fast.
+solo follows [trunk-based development](https://trunkbaseddevelopment.com/): branches are **short-lived** (target ≤ 2 days), scoped small, and merged back to `trunk` fast.
 
 **Size gate:** if the issue is labeled `size:xl`, stop and warn:
 

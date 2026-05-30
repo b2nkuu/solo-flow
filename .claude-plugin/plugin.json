@@ -1,5 +1,5 @@
 {
-  "name": "solo-flow",
+  "name": "solo",
   "version": "0.1.0",
   "description": "Lightweight task management for solopreneurs using GitHub Issues, from inside Claude Code.",
   "author": {

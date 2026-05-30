@@ -78,7 +78,7 @@ Keep output compact — no extra blank lines, no headers other than the ones abo
 
 ### 7. Stale-branch warning (trunk-based)
 
-After rendering, for each **In Progress** issue parse the `started:` field from its `<!-- solo-flow:metadata -->` block. If `started` is more than `trunk.max_branch_age_days` (default `2`) days ago, append a one-line warning under the In Progress group:
+After rendering, for each **In Progress** issue parse the `started:` field from its `<!-- solo:metadata -->` block. If `started` is more than `trunk.max_branch_age_days` (default `2`) days ago, append a one-line warning under the In Progress group:
 
 ```
   ⚠ #<n> in progress for <X>d — ship or break it down

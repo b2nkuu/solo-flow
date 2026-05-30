@@ -54,7 +54,7 @@ Allowed values:
    Plan it anyway? [y/N]
 ```
 
-`xl` is allowed (it's just a flag for "needs breakdown"), but solo-flow follows trunk-based development — long-lived branches are an anti-pattern.
+`xl` is allowed (it's just a flag for "needs breakdown"), but solo follows trunk-based development — long-lived branches are an anti-pattern.
 
 ### 4. Summarize and confirm
 

@@ -5,14 +5,14 @@ description: >
   work on, finishing or blocking work, or reviewing their week — in either
   English or Thai ("อยากเพิ่ม...", "วันนี้ทำอะไรดี", "เก็บไอเดีย",
   "งาน #45 เสร็จแล้ว", "ติดอยู่ที่...", "review สัปดาห์นี้") — in a repo
-  that uses solo-flow (GitHub Issues with status:* / type:* labels). Helps
+  that uses solo (GitHub Issues with status:* / type:* labels). Helps
   capture, start, note, block, complete, and review tasks via the /solo:*
   commands.
 ---
 
-# Solo-Flow Assistant
+# Solo Assistant
 
-User จัดการงานตัวเองเป็น GitHub Issues ผ่าน plugin `solo-flow`. เวลาเขา/เธอพูดเรื่องงานแบบธรรมชาติ ให้เสนอ `/solo:*` command ที่เหมาะ — แต่ **ยืนยันก่อนทุกครั้งที่จะ mutate GitHub state**.
+User จัดการงานตัวเองเป็น GitHub Issues ผ่าน plugin `solo`. เวลาเขา/เธอพูดเรื่องงานแบบธรรมชาติ ให้เสนอ `/solo:*` command ที่เหมาะ — แต่ **ยืนยันก่อนทุกครั้งที่จะ mutate GitHub state**.
 
 ## Mapping ภาษาธรรมชาติ → command
 
@@ -41,7 +41,7 @@ User จัดการงานตัวเองเป็น GitHub Issues ผ
 
 ## Trunk-based coaching
 
-solo-flow assume [trunk-based development](https://trunkbaseddevelopment.com/). Coach เมื่อมัน relevant — อย่าเทศน์โดยไม่จำเป็น:
+solo assume [trunk-based development](https://trunkbaseddevelopment.com/). Coach เมื่อมัน relevant — อย่าเทศน์โดยไม่จำเป็น:
 
 - **Branch อายุสั้น.** ถ้า `/solo:today` โชว์งาน in-progress ค้างเกิน 2 วัน → เตือนเบาๆ ให้ ship หรือแตกย่อย.
 - **Scope เล็กต่อ branch.** เวลา capture/plan งานที่ฟังดูใหญ่ ("rewrite auth system", "redo dashboard") → เสนอแตกเป็น issue ย่อย (`size:s`/`m`) ที่ merge ภายใน ≤ 2 วัน.
@@ -66,4 +66,4 @@ solo-flow assume [trunk-based development](https://trunkbaseddevelopment.com/). 
 ## Skip list (ไม่ต้องทำอะไร)
 
 - User กำลังอ่าน code, debug, หรือทำ engineering ทั่วไปที่ไม่เกี่ยว task workflow.
-- Repo ไม่มี `status:*` หรือ `type:*` labels (ไม่ใช่ solo-flow project) และไม่มี `.solo/config.yml`. กรณีนั้นเสนอ `/solo:init` เฉพาะถ้า user แสดงความสนใจเรื่อง task management.
+- Repo ไม่มี `status:*` หรือ `type:*` labels (ไม่ใช่ solo project) และไม่มี `.solo/config.yml`. กรณีนั้นเสนอ `/solo:init` เฉพาะถ้า user แสดงความสนใจเรื่อง task management.

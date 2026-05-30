@@ -1,4 +1,4 @@
-# solo-flow
+# solo
 
 Lightweight task management for solopreneurs using GitHub Issues, from inside Claude Code.
 
@@ -6,7 +6,7 @@ Capture an idea, work it, ship it, reflect on the week — all without opening t
 
 ## Why
 
-You already use GitHub. You're working alone. You don't need a Jira clone — you need to add a task in 5 seconds, know what to do next in 5 seconds, and close it in 5 seconds. solo-flow keeps the data in Issues (single source of truth) and gives you a small set of slash commands that do exactly that.
+You already use GitHub. You're working alone. You don't need a Jira clone — you need to add a task in 5 seconds, know what to do next in 5 seconds, and close it in 5 seconds. solo keeps the data in Issues (single source of truth) and gives you a small set of slash commands that do exactly that.
 
 ## Prerequisites
 
@@ -97,11 +97,11 @@ No secrets — auth is entirely via `gh`.
 
 ## Natural-language mode
 
-A bundled skill (`solo-flow-assistant`) lets Claude proactively suggest the right `/solo:*` command when you talk about tasks in plain English ("I should add dark mode", "what's next", "done with #45"). It always confirms before mutating GitHub state.
+A bundled skill (`solo-assistant`) lets Claude proactively suggest the right `/solo:*` command when you talk about tasks in plain English ("I should add dark mode", "what's next", "done with #45"). It always confirms before mutating GitHub state.
 
 ## Trunk-based development
 
-solo-flow assumes [trunk-based development](https://trunkbaseddevelopment.com/) — a single long-lived `trunk` branch (`main` by default) and short-lived, small feature branches that merge back fast. The plugin bakes the principles in:
+solo assumes [trunk-based development](https://trunkbaseddevelopment.com/) — a single long-lived `trunk` branch (`main` by default) and short-lived, small feature branches that merge back fast. The plugin bakes the principles in:
 
 - **Branch from trunk, always.** `/solo:start` updates `trunk` and branches off it — never off another feature branch.
 - **Short-lived branches.** Target ≤ 2 days. `/solo:today` warns when an in-progress task is older than `trunk.max_branch_age_days` (configurable).

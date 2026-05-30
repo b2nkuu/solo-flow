@@ -49,7 +49,7 @@ If an outcome was provided, edit the body: under the `## Notes` section, append:
 
 ### 5. Update metadata
 
-Set `completed: <YYYY-MM-DD>` inside the `<!-- solo-flow:metadata ... -->` block (only if currently empty). Same edit pattern.
+Set `completed: <YYYY-MM-DD>` inside the `<!-- solo:metadata ... -->` block (only if currently empty). Same edit pattern.
 
 ### 6. Flip status to done
 
