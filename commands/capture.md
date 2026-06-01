@@ -100,25 +100,48 @@ branch:
 
 Preserve the `<!-- solo:metadata ... -->` comment exactly as shown — other commands parse it.
 
-### 6. Create the issue
+### 6. Resolve milestone (optional)
+
+Read `.solo/config.yml`: `milestone.current` (string) and `milestone.required` (default `false`). If config is missing, treat both as unset/false.
+
+If `milestone.current` is non-empty:
+
+1. Verify it is still an **open** milestone on the repo:
+   ```bash
+   gh api "repos/<owner/repo>/milestones?state=open" --jq '.[].title'
+   ```
+2. If found → use it. If not found (closed/deleted) → fall through to the "no milestone" branch below.
+
+**No milestone** branch:
+
+- `milestone.required: true` → block:
+  ```
+  ❌ No active milestone. Set one with /solo:plan or edit .solo/config.yml milestone.current.
+  ```
+  Stop without creating the issue.
+- `milestone.required: false` → proceed without a milestone (no prompt — keep capture fast).
+
+### 7. Create the issue
 
 ```bash
 gh issue create \
   --repo <owner/repo> \
   --title "<title>" \
   --body-file <tempfile> \
-  --label "<type:*>,status:inbox"
+  --label "<type:*>,status:inbox" \
+  [--milestone "<milestone.current>"]
 ```
 
-Use `--body-file` (write the body to a temp file) rather than `--body` to avoid shell-escaping issues with multi-line content. Capture the returned issue URL/number.
+Only include `--milestone` if a valid open milestone was resolved in step 6. Use `--body-file` (write the body to a temp file) rather than `--body` to avoid shell-escaping issues with multi-line content. Capture the returned issue URL/number.
 
-### 7. Confirm
+### 8. Confirm
 
-Print exactly two lines:
+Print exactly two lines (three if a milestone was attached):
 
 ```
 ✅ Captured #<number>: <title>
    <type:*>  ·  status:inbox
+   📦 <milestone>
 ```
 
 ## Design constraints

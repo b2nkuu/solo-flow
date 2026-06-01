@@ -94,6 +94,14 @@ note:
   storage: "comment"
   decision_prefix: "[decision]"
 
+release:
+  tag_pattern: "v{version}"
+  initial_version: "0.1.0"
+
+milestone:
+  current: "v0.1.0"               # active milestone; new issues attach here
+  required: false                 # opt-in: set true to enforce milestone on every issue
+
 display:
   today_suggested_limit: 5
   date_format: "%Y-%m-%d"
@@ -101,11 +109,15 @@ display:
 
 Create `.solo/` directory if missing.
 
-### 5. Optional milestones
+If `.solo/config.yml` already exists but is missing the `release:` or `milestone:` blocks (older installs), append the missing blocks in place — do not rewrite the rest of the file.
 
-Ask once: `Create initial milestones? (comma-separated names, or enter to skip):`
+### 5. Initial milestone
 
-For each name, run:
+Default: create one milestone named after `release.initial_version` (e.g. `v0.1.0`).
+
+Offer: `Create initial milestone v0.1.0? [Y/n]` (also accept a custom name, or `n` to skip).
+
+If accepted:
 
 ```bash
 gh api repos/<owner/repo>/milestones -f title="<name>" 2>/dev/null || true
@@ -113,13 +125,17 @@ gh api repos/<owner/repo>/milestones -f title="<name>" 2>/dev/null || true
 
 (Errors swallowed — duplicates are not fatal.)
 
+If skipped, set `milestone.current: ""` in the config so other commands know there's no active milestone yet.
+
+If multiple names were given (comma-separated), create each; set `milestone.current` to the first one.
+
 ### 6. Confirm
 
 ```
 ✅ solo initialized for <owner/repo>
    labels: 18 created/updated
    config: .solo/config.yml
-   [milestones: <list>]
+   milestone: <name> (current)
 ```
 
-Drop the milestones line if none were created.
+Drop the milestone line if none was created.

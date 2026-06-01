@@ -27,6 +27,9 @@ User จัดการงานตัวเองเป็น GitHub Issues ผ
 | "วาง plan หน่อย", "เคลียร์ inbox", "groom backlog" | `/solo:plan` |
 | "สัปดาห์นี้ทำอะไรไป", "weekly summary", "ship อะไรบ้าง" | `/solo:week` |
 | "project เป็นไง", "status รวม", "where are we" | `/solo:status` |
+| "ปล่อย release", "tag v0.3", "cut a release", "ship v0.2" | `/solo:release` (เสนอ `--dry-run` ก่อน) |
+| "เปิด milestone ใหม่", "milestone v0.4", "set current milestone" | `/solo:plan milestone create <name>` |
+| "milestone ตอนนี้อะไร", "ดู milestone", "list milestones" | `/solo:plan milestone list` |
 
 ## Behavior rules
 
@@ -48,6 +51,9 @@ solo assume [trunk-based development](https://trunkbaseddevelopment.com/). Coach
 - **Branch จาก trunk.** อย่าเสนอ branch จาก feature branch อื่น. แนะนำ pull `main` ล่าสุดก่อนเสมอ (หรือชื่อ trunk จาก config).
 - **Feature flag > branch ยาว.** Feature หลายสัปดาห์ → เสนอ gate ด้วย flag merge เข้า trunk ต่อเนื่องได้.
 - **One issue, one branch, one PR.** อย่าเสนอ bundle งานที่ไม่เกี่ยวกัน.
+- **Release = tag, ไม่ใช่ branch.** User ขอ `release/x.y` branch → อธิบายว่า solo ใช้ tag จาก trunk แทน. Hotfix = commit ใหม่บน trunk + patch tag.
+- **Milestone = ตัว group release.** User คุยเรื่อง roadmap/version → เสนอ `/solo:plan milestone create`. อย่าสร้างเองโดยไม่ confirm.
+- **`/solo:release` ครั้งแรกใช้ `--dry-run` เสมอ.** Preview tag + notes ก่อน push.
 
 อย่าบรรยายยาว. ทิ้ง nudge บรรทัดเดียวเมื่อเข้าจังหวะ นอกนั้นเงียบไว้.
 

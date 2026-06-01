@@ -98,18 +98,34 @@ Note ธรรมดาไป comment thread. Note ที่ขึ้น `[decis
 /solo:status
 ```
 
+**Cut a release** — tag จาก trunk, generate notes, close milestone:
+```
+/solo:release --dry-run     # preview ก่อน
+/solo:release               # tag + push + GitHub Release + open next milestone
+```
+
+**จัดการ milestone**:
+```
+/solo:plan milestone create v0.4
+/solo:plan milestone list
+/solo:plan milestone current v0.4
+/solo:plan milestone close v0.3
+```
+
 ## Command cheat-sheet
 
 | Command | ทำอะไร | Args |
 |---|---|---|
-| `/solo:capture` | Capture เข้า Inbox | `"text"` |
-| `/solo:today` | Focus วันนี้ | — |
+| `/solo:capture` | Capture เข้า Inbox (auto-attach `milestone.current`) | `"text"` |
+| `/solo:today` | Focus วันนี้ + milestone progress | — |
 | `/solo:start` | Flip in-progress + branch | `<issue#>` |
 | `/solo:done` | Outcome + close + PR (optional) | `<issue#>` |
 | `/solo:note` | Append note | `<issue#> "text"` |
 | `/solo:block` | Mark blocked | `<issue#> "reason"` |
 | `/solo:unblock` | Resume | `<issue#> ["resolution"]` |
 | `/solo:plan` | Triage Inbox | — |
+| `/solo:plan milestone` | จัดการ milestone | `<action> [name]` |
+| `/solo:release` | Tag from trunk + notes + close milestone | `[--dry-run]` |
 | `/solo:week` | 7 วันที่ผ่านมา | — |
 | `/solo:status` | Snapshot | — |
 | `/solo:init` | Setup (idempotent) | — |
@@ -122,8 +138,10 @@ solo ใช้ [trunk-based development](https://trunkbaseddevelopment.com/):
 - **Branch อายุสั้น (≤ 2 วัน)** — `/solo:today` และ `/solo:status` เตือนเมื่องาน in-progress ค้างนาน
 - **One issue → one branch → one PR** — ห้ามรวม
 - **Feature flags ดีกว่า branch ยาว** — งานหลายสัปดาห์ใช้ flag gate แล้ว merge เข้า trunk ต่อเนื่อง
+- **Release = tag จาก trunk** — `/solo:release` ตัด tag ตรงจาก trunk. ไม่มี release branch. Hotfix = commit ใหม่บน trunk + patch tag
+- **Milestone group ให้ release** — ทุก issue ผูก `milestone.current` (เปิด strict ผ่าน `milestone.required: true`)
 
-ปรับใน `.solo/config.yml` ที่ `trunk.max_branch_age_days` (default `2`; `0` = ปิด).
+ปรับใน `.solo/config.yml` ที่ `trunk.max_branch_age_days` (default `2`; `0` = ปิด), `release.initial_version`, `milestone.required`.
 
 ## ใช้คู่กับ spirit-mindset
 
@@ -137,6 +155,7 @@ solo ใช้ [trunk-based development](https://trunkbaseddevelopment.com/):
 | Block เพราะ bug | `/solo:block <n>` | `/debug` |
 | ระหว่างทำ code เริ่มเลอะ | `/solo:note <n>` | `/refactor` (Kaizen) |
 | Done + เปิด PR | `/solo:done <n>` | `/inspect` (Shokunin — review งานฝีมือ) |
+| ตัด release | `/solo:release` | `/inspect` (review trunk ก่อน tag) |
 | Weekly review | `/solo:week` | reflect ด้วย Kaizen mindset |
 
 ทั้งคู่ใช้คนละ namespace ไม่ชนกัน. ใช้แค่ solo อย่างเดียวก็ทำงานได้เต็ม.

@@ -13,7 +13,7 @@ Show a focused, scannable list of what to work on today.
 
 - Run `gh auth status`. On failure: stop, tell user to run `gh auth login`.
 - Resolve repo: `.solo/config.yml` `repo:` field → fallback `gh repo view --json nameWithOwner -q .nameWithOwner` → ask user.
-- Read `display.today_suggested_limit` from `.solo/config.yml` (default `5`).
+- Read `display.today_suggested_limit` (default `5`), `milestone.current`, and `milestone.required` (default `false`) from `.solo/config.yml`.
 
 ### 2. Fetch open issues
 
@@ -21,7 +21,7 @@ One call, then group in memory:
 
 ```bash
 gh issue list --repo <owner/repo> --state open --limit 200 \
-  --json number,title,labels,body
+  --json number,title,labels,body,milestone
 ```
 
 ### 3. Group by status
@@ -58,6 +58,7 @@ Use this exact shape (omit a group entirely if empty; if all three are empty, pr
 
 ```
 📅 Today (<YYYY-MM-DD>)
+📦 <milestone.current> (<closed>/<total> done)        ← only if milestone.current set
 
 In Progress (<count>):
   #<n> [<priority>][<size>] <title>
@@ -72,6 +73,15 @@ Blocked (<count>):
   …
 ```
 
+For the milestone progress line, fetch counts via:
+
+```bash
+gh api "repos/<owner/repo>/milestones?state=open" \
+  --jq '.[] | select(.title=="<milestone.current>") | "\(.closed_issues)\t\(.open_issues + .closed_issues)"'
+```
+
+If `milestone.current` is set but no matching open milestone exists, show `📦 <name> (missing — run /solo:plan milestone)` instead.
+
 For the `[priority]` and `[size]` brackets in-line, use short forms: `high`/`med`/`low` and `xs`/`s`/`m`/`l`/`xl`. If a label is missing, render `-` (e.g. `[-][m]`).
 
 Keep output compact — no extra blank lines, no headers other than the ones above.
@@ -85,3 +95,18 @@ After rendering, for each **In Progress** issue parse the `started:` field from 
 ```
 
 This is the trunk-based-development nudge: short-lived branches only. Don't show the warning if `trunk.max_branch_age_days` is set to `0` (disabled).
+
+### 8. Milestone hygiene warning
+
+After the stale-branch warning, count open issues (from step 2) with `milestone == null`. If the count is > 0:
+
+- `milestone.required: true` → loud warning:
+  ```
+  ⚠ <N> open issues without a milestone — /solo:plan to backfill
+  ```
+- `milestone.required: false` → only show if `milestone.current` is set (the user clearly cares about milestones) and the count is ≥ 3, as a soft hint:
+  ```
+  ℹ <N> open issues without a milestone
+  ```
+
+Skip entirely if `milestone.current` is unset and `milestone.required` is false.
