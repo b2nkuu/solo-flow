@@ -1,8 +1,7 @@
-<p align="center">
+<div align="center">
   <img src="assets/logo.png" alt="solo" width="200" />
-</p>
-
-# solo
+  <h1>solo</h1>
+</div>
 
 Lightweight task management for solopreneurs using GitHub Issues, from inside Claude Code.
 
