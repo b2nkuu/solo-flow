@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.png" alt="solo" width="200" />
+</p>
+
 # solo
 
 Lightweight task management for solopreneurs using GitHub Issues, from inside Claude Code.
