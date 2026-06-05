@@ -102,3 +102,21 @@ Record the branch name in metadata `branch:` field (same body-edit flow as step 
 ```
 
 If branch was skipped, drop the second line and add `(no branch created)`.
+
+### 7. Show goalposts
+
+Parse the issue body for the `## Acceptance` and `## Test Plan` sections. Print them as-is to set context for the work — checked items keep their `[x]`, unchecked stay `[ ]`. Skip a section entirely if it is missing or contains only the empty `- [ ]` placeholder. If both are absent, skip the whole step (no blank output).
+
+```
+📋 Acceptance:
+   - [ ] <item 1>
+   - [ ] <item 2>
+   …
+
+🧪 Test Plan:
+   - [ ] <item 1>
+   - [ ] <item 2>
+   …
+```
+
+Read-only — does not modify the issue.
