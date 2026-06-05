@@ -27,25 +27,43 @@ gh issue view <n> --repo <owner/repo> --json number,title,body,labels,state
 
 If already closed → `ℹ️  #<n> already closed.` and stop.
 
-### 3. Ask once for outcome (optional)
+### 3. Ask once for outcome + acceptance (optional)
 
-Prompt:
+First, parse the `## Acceptance` section of the body and list every `- [ ]` / `- [x]` item with an index. If the section is missing or has only the empty `- [ ]` placeholder, skip the acceptance prompt.
+
+Prompt in one block:
 
 ```
+Acceptance items (<N>):
+  1. [<x or space>] <item 1>
+  2. [<x or space>] <item 2>
+  …
+
+Tick all? [Y/edit/n]
 One-line outcome (enter to skip):
 ```
 
-If the user types nothing (empty), skip the outcome step. Otherwise hold the line for step 4.
+Read the responses (Y/edit/n is the first line, outcome is the second). If the user types nothing for outcome, skip the outcome step. Hold both decisions for step 4.
 
-### 4. Append outcome to body Notes (if given)
+Acceptance handling:
+- **Y** (default) — set every `- [ ]` under `## Acceptance` to `- [x]`. Already-ticked items stay ticked.
+- **edit** — re-prompt: `Tick which? (e.g. "1,3,4")`. Parse the comma-separated indices and tick only those (leave unlisted items unchanged). Invalid/out-of-range indices are ignored with a one-line warning.
+- **n** — leave the section unchanged.
 
-If an outcome was provided, edit the body: under the `## Notes` section, append:
+If the acceptance section was skipped (missing or placeholder-only), behave as if `n` was chosen.
 
-```
-- <YYYY-MM-DD>: [done] <outcome>
-```
+### 4. Apply body edits (outcome + acceptance)
 
-(If `## Notes` is empty or contains only whitespace, just put the bullet right under the heading.) Use the same body-fetch / edit-in-place / `gh issue edit --body-file` pattern as `/solo:start`.
+Edit the body in one write that covers both changes (skip the write entirely if neither applies):
+
+- If an outcome was provided, append under `## Notes`:
+  ```
+  - <YYYY-MM-DD>: [done] <outcome>
+  ```
+  (If `## Notes` is empty or contains only whitespace, put the bullet right under the heading.)
+- If the acceptance decision was `Y` or `edit`, rewrite the `## Acceptance` block per step 3.
+
+Use the same body-fetch / edit-in-place / `gh issue edit --body-file` pattern as `/solo:start`.
 
 ### 5. Update metadata
 
