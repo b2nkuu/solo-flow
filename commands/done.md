@@ -27,11 +27,11 @@ gh issue view <n> --repo <owner/repo> --json number,title,body,labels,state
 
 If already closed → `ℹ️  #<n> already closed.` and stop.
 
-### 3. Ask once for outcome + acceptance (optional)
+### 3. Ask once for outcome + acceptance + test plan (optional)
 
-First, parse the `## Acceptance` section of the body and list every `- [ ]` / `- [x]` item with an index. If the section is missing or has only the empty `- [ ]` placeholder, skip the acceptance prompt.
+Parse both `## Acceptance` and `## Test Plan` from the body. For each section, list every `- [ ]` / `- [x]` item with an index. A section is "skippable" if it is missing or contains only the empty `- [ ]` placeholder — drop it from the prompt entirely. If both sections are skippable, jump straight to the outcome question.
 
-Prompt in one block:
+Prompt in one block (omit any skippable section):
 
 ```
 Acceptance items (<N>):
@@ -39,20 +39,29 @@ Acceptance items (<N>):
   2. [<x or space>] <item 2>
   …
 
+Test Plan items (<M>):
+  1. [<x or space>] <item 1>
+  …
+
 Tick all? [Y/edit/n]
 One-line outcome (enter to skip):
 ```
 
-Read the responses (Y/edit/n is the first line, outcome is the second). If the user types nothing for outcome, skip the outcome step. Hold both decisions for step 4.
+`Tick all?` covers both sections as a single decision (the common case: the work is done, everything ticks). Read the responses (Y/edit/n is the first line, outcome is the second). If the user types nothing for outcome, skip the outcome step. Hold all decisions for step 4.
 
-Acceptance handling:
-- **Y** (default) — set every `- [ ]` under `## Acceptance` to `- [x]`. Already-ticked items stay ticked.
-- **edit** — re-prompt: `Tick which? (e.g. "1,3,4")`. Parse the comma-separated indices and tick only those (leave unlisted items unchanged). Invalid/out-of-range indices are ignored with a one-line warning.
-- **n** — leave the section unchanged.
+Tick handling:
+- **Y** (default) — set every `- [ ]` under `## Acceptance` AND `## Test Plan` to `- [x]`. Already-ticked items stay ticked.
+- **edit** — re-prompt separately so the user can tick a subset of each section:
+  ```
+  Acceptance tick which? (e.g. "1,3,4", "all", "none")
+  Test plan tick which? (e.g. "1,2", "all", "none")
+  ```
+  Parse comma-separated indices per section. `all` ticks every item in that section; `none` leaves it. Invalid/out-of-range indices are ignored with a one-line warning.
+- **n** — leave both sections unchanged.
 
-If the acceptance section was skipped (missing or placeholder-only), behave as if `n` was chosen.
+If a section was skippable, treat it as if `none` was chosen for that section (no edits to it).
 
-### 4. Apply body edits (outcome + acceptance)
+### 4. Apply body edits (outcome + acceptance + test plan)
 
 Edit the body in one write that covers both changes (skip the write entirely if neither applies):
 
@@ -61,7 +70,7 @@ Edit the body in one write that covers both changes (skip the write entirely if 
   - <YYYY-MM-DD>: [done] <outcome>
   ```
   (If `## Notes` is empty or contains only whitespace, put the bullet right under the heading.)
-- If the acceptance decision was `Y` or `edit`, rewrite the `## Acceptance` block per step 3.
+- If the acceptance decision was `Y` or `edit`, rewrite the `## Acceptance` block per step 3. Same for `## Test Plan`.
 
 Use the same body-fetch / edit-in-place / `gh issue edit --body-file` pattern as `/solo:start`.
 
