@@ -224,7 +224,13 @@ Present them and offer a batch assignment:
 Assign milestone? (name, "all:<name>", "skip", or enter to defer)
 ```
 
-On a name (e.g. `v0.4`) or `all:<name>`, apply via `gh issue edit <n> --milestone "<name>"`. Verify the milestone exists and is open first — if not, prompt to create it (same flow as the sub-command below).
+On a name (e.g. `v0.4`) or `all:<name>`, apply via `gh issue edit <n> --milestone "<name>"`. Verify the milestone exists and is open first — if not, abort the assignment for that batch with:
+
+```
+❌ Milestone "<name>" does not exist. Run /solo:plan milestone create <name> first, then re-run /solo:plan.
+```
+
+Same rule as the inbox batch: `/solo:plan` never auto-creates milestones — keep creation explicit through the sub-command.
 
 Skip this step entirely when `milestone.required: false`.
 
