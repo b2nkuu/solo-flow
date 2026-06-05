@@ -130,7 +130,7 @@ For each non-skipped item:
 
 1. Ensure each needed label exists:
    ```bash
-   gh label create "priority:high"   --color "d62728" --force --repo <owner/repo>
+   gh label create "priority:high"   --color "e11d48" --force --repo <owner/repo>
    gh label create "priority:medium" --color "ff9900" --force --repo <owner/repo>
    gh label create "priority:low"    --color "9e9e9e" --force --repo <owner/repo>
    gh label create "size:xs" --color "c4b5fd" --force --repo <owner/repo>

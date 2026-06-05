@@ -26,7 +26,7 @@ gh auth status
 
 ### 3. Create labels (idempotent)
 
-Create the full taxonomy with `--force` so reruns are safe. Run them as a batch:
+Create the full taxonomy with `--force` so reruns are safe. Run them as a batch. Every label uses a distinct hex color — issues frequently carry one label from each category at once, so reusing a color across categories makes the chips visually indistinguishable.
 
 ```bash
 REPO=<owner/repo>
@@ -39,7 +39,7 @@ gh label create "type:idea"     --color "9467bd" --force --repo $REPO
 gh label create "type:research" --color "17becf" --force --repo $REPO
 
 # Priority
-gh label create "priority:high"   --color "d62728" --force --repo $REPO
+gh label create "priority:high"   --color "e11d48" --force --repo $REPO
 gh label create "priority:medium" --color "ff9900" --force --repo $REPO
 gh label create "priority:low"    --color "9e9e9e" --force --repo $REPO
 
