@@ -73,6 +73,24 @@ You don't need `/solo:init` to start capturing — `/solo:capture` works out of 
 - **Priority** is `priority:high|medium|low`. **Size** is `size:xs|s|m|l|xl`. Set during `/solo:plan`.
 - **Decisions** are notes prefixed `[decision]` — posted as comments and mirrored into the issue body's `## Notes` section so they stay parseable.
 
+## Acceptance & Test Plan
+
+Every issue body has an `## Acceptance` and `## Test Plan` section. They start blank from `/solo:capture` and stay out of your way until you're ready to think about the work.
+
+- **At plan time.** `/solo:plan` asks once per item if you want it to suggest Acceptance Criteria and a Test Plan from the title, the `## What` line, and the issue's `type:*`. You can accept (`Y`), paste your own (`edit`), or skip — nothing is written without confirmation.
+- **At start time.** `/solo:start` prints both sections after creating the branch so you see the goalposts and verification steps as you switch into the work.
+- **At close time.** `/solo:done` lists every checklist item alongside the outcome prompt and offers `Tick all? [Y/edit/n]` — the common "everything done" case is one keystroke; `edit` lets you tick a subset per section.
+
+The sections stay parseable Markdown checkboxes, so the issue page on GitHub doubles as the audit trail for what was promised, what was tested, and what shipped.
+
+### xl breakdown
+
+`/solo:plan` won't let `size:xl` items slip through silently. When you mark one xl, it offers a third option alongside `[k]eep` / `[s]kip`:
+
+- `[b]reakdown` — generate 2–4 sub-issue proposals from the parent's `## What`, create the ones you pick as `status:planned` (with `Split from #<parent>` in their Notes), and optionally close the parent. The new sub-issues feed straight into the same AC + test plan pass as the originals.
+
+This keeps the trunk-based rule "short-lived branches only" honest without adding a separate epic concept.
+
 ## Configuration
 
 `.solo/config.yml` is created by `/solo:init`:
