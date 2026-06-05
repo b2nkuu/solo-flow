@@ -26,11 +26,11 @@ solo เปลี่ยน Claude Code เป็น task manager สำหรั
 ## Workflow รายวัน
 
 ```
-        ┌─────────────────────────────────┐
-        │                                 │
-        ▼                                 │
- /solo:capture ──▶ /solo:plan ──▶ /solo:start ──▶ /solo:note ──▶ /solo:done
-   (Inbox)         (Planned)      (In Progress)   (จด note)      (Closed + PR)
+        ┌─────────────────────────────────────────────┐
+        │                                             │
+        ▼                                             │
+ /solo:capture ──▶ /solo:plan ──▶ /solo:start ──▶ /solo:note ──▶ /solo:test ──▶ /solo:done
+   (Inbox)         (Planned)      (In Progress)   (จด note)      (Verify)       (Closed + PR)
         ▲                              │
         └────────── /solo:today ───────┘
 ```
@@ -77,11 +77,17 @@ Note ธรรมดาไป comment thread. Note ที่ขึ้น `[decis
 /solo:unblock 42 "spec arrived, going with option B"
 ```
 
+**ตรวจตาม test plan** — รัน/verify ทีละ item ก่อน close:
+```
+/solo:test 42
+```
+เดินผ่าน `## Test Plan` ทีละข้อ — เสนอคำสั่งให้รัน หรือ verify เอง — แล้วติ๊กข้อที่ผ่านกลับเข้า body. ไม่เปลี่ยน status.
+
 **เสร็จงาน** — จด outcome, close, ship:
 ```
 /solo:done 42
 ```
-ถ้า local branch ตรงกับที่บันทึกไว้ จะถามว่าเปิด PR ไป trunk เลยมั้ย.
+ถ้า local branch ตรงกับที่บันทึกไว้ จะถามว่าเปิด PR ไป trunk เลยมั้ย. ตอน close ก็เสนอ `Tick all? [Y/edit/n]` ให้กับ AC + test plan ที่เหลือด้วย.
 
 **Inbox เต็ม** — triage priority + size รวดเดียว:
 ```
@@ -119,6 +125,7 @@ Note ธรรมดาไป comment thread. Note ที่ขึ้น `[decis
 | `/solo:capture` | Capture เข้า Inbox (auto-attach `milestone.current`) | `"text"` |
 | `/solo:today` | Focus วันนี้ + milestone progress | — |
 | `/solo:start` | Flip in-progress + branch | `<issue#>` |
+| `/solo:test` | Walk test plan, run or verify, tick passed items | `<issue#>` |
 | `/solo:done` | Outcome + close + PR (optional) | `<issue#>` |
 | `/solo:note` | Append note | `<issue#> "text"` |
 | `/solo:block` | Mark blocked | `<issue#> "reason"` |
