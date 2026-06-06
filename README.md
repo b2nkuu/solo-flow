@@ -54,7 +54,7 @@ You don't need `/solo:init` to start capturing — `/solo:capture` works out of 
 |---|---|---|
 | `/solo:capture` | Capture a task or idea to the Inbox | `"text"` |
 | `/solo:today` | Show today's focus list | — |
-| `/solo:start` | Mark in-progress + create branch | `<issue#>` |
+| `/solo:start` | Mark in-progress + create branch (single issue), or run every planned issue through a Workflow (`workflow` shape) | `<issue#> \| workflow` |
 | `/solo:test` | Walk the test plan, run or verify each item, tick passed | `<issue#>` |
 | `/solo:done` | Record outcome + close | `<issue#>` |
 | `/solo:note` | Append a timestamped note | `<issue#> "text"` |
@@ -93,6 +93,25 @@ The sections stay parseable Markdown checkboxes, so the issue page on GitHub dou
 - `[b]reakdown` — generate 2–4 sub-issue proposals from the parent's `## What`, create the ones you pick as `status:planned` (with `Split from #<parent>` in their Notes), and optionally close the parent. The new sub-issues feed straight into the same AC + test plan pass as the originals.
 
 This keeps the trunk-based rule "short-lived branches only" honest without adding a separate epic concept.
+
+### Batch workflow
+
+When the planned backlog is small but non-trivial — a typical solo sprint — there's no point starting one issue at a time. `/solo:start workflow` (note: no issue number) picks up every `status:planned` issue in `milestone.current` and hands them to a Claude Code Workflow:
+
+```
+/solo:start workflow
+```
+
+One pipeline per issue, all in parallel (capped at `workflow.max_parallel`, default 4):
+
+1. **Claim** — atomically flip `status:planned` → `status:in-progress` and create a branch + worktree off trunk. Issues are claimed only as a slot frees up, so killing the workflow mid-batch leaves uncalled issues untouched.
+2. **Plan** — derive a subtask list from the issue's `## What` + `## Acceptance` + `## Test Plan`; refuse to proceed unless every Acceptance item is covered.
+3. **Implement** — work the subtasks serially inside the issue's own worktree (no cross-issue file conflicts even when other pipelines run in parallel).
+4. **Verify** — walk `## Test Plan` like `/solo:test`; tick `[x]` for pass, loop back to Implement (up to `workflow.max_retries`) for fail.
+
+Refusals are up front: empty source list, any `size:xl` in the batch, or any issue missing AC / Test Plan → batch aborts before mutating anything. Per-pipeline failures are isolated — one red issue does not kill the others, and successful pipelines leave their worktree + branch ready for `/solo:done <n>`.
+
+`/solo:start <n>` (single-issue) keeps its original behaviour and never invokes a Workflow.
 
 ## Configuration
 

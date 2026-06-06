@@ -61,6 +61,12 @@ cd path/to/your-repo
 ```
 `/solo:start` อัพ `trunk`, branch จากตรงนั้น, แล้ว flip status เป็น in-progress.
 
+**Batch ลุยทุก planned ผ่าน Workflow** — ใช้เมื่อ `/solo:plan` วาง backlog เสร็จและพร้อม implement:
+```
+/solo:start workflow
+```
+หยิบทุก issue `status:planned` ที่ตรง `milestone.current` (หรือทุกตัวถ้าไม่ set), spawn 1 pipeline ต่อ issue parallel (cap `workflow.max_parallel` default 4). แต่ละ pipeline: claim (flip status + branch + worktree) → plan → implement (ใน worktree แยก, ไม่ชนกัน) → verify Test Plan + loop. Refuse ทันทีถ้า batch ว่าง / มี `size:xl` / มีตัว AC หรือ Test Plan ว่าง. ดู progress ที่ `/workflows`.
+
 **ทำงานอยู่** — จด note ระหว่างทาง โดยเฉพาะ decision:
 ```
 /solo:note 42 "tried bcrypt, settled on argon2"
@@ -124,7 +130,7 @@ Note ธรรมดาไป comment thread. Note ที่ขึ้น `[decis
 |---|---|---|
 | `/solo:capture` | Capture เข้า Inbox (auto-attach `milestone.current`) | `"text"` |
 | `/solo:today` | Focus วันนี้ + milestone progress | — |
-| `/solo:start` | Flip in-progress + branch | `<issue#>` |
+| `/solo:start` | Flip in-progress + branch (single), หรือ `workflow` (batch ทุก planned) | `<issue#> \| workflow` |
 | `/solo:test` | Walk test plan, run or verify, tick passed items | `<issue#>` |
 | `/solo:done` | Outcome + close + PR (optional) | `<issue#>` |
 | `/solo:note` | Append note | `<issue#> "text"` |
