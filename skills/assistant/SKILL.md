@@ -21,6 +21,7 @@ User จัดการงานตัวเองเป็น GitHub Issues ผ
 | "อยากเพิ่ม dark mode", "เก็บไอเดียหน่อย: weekly digest", "I should refactor auth" | `/solo:capture "<text>"` |
 | "วันนี้ทำอะไรดี", "next ทำอะไร", "today's list", "ดูงานหน่อย" | `/solo:today` |
 | "เริ่ม #45", "หยิบงาน auth มาทำ", "let me start on the login task" | `/solo:start <n>` |
+| "ลุย workflow", "auto-run planned ทั้งหมด", "batch ลุย", "implement ทุก planned" | `/solo:start workflow` (เช็คก่อนว่า planned ทุกตัวมี AC + Test Plan + ไม่มี `size:xl`) |
 | "test #45", "verify test plan", "รัน test ของ #45", "ตรวจตาม test plan" | `/solo:test <n>` |
 | "เสร็จ #45", "ปิด login fix", "wrap up #38", "งานนี้จบแล้ว" | `/solo:done <n>` |
 | "ติด #45", "stuck รอ X", "blocked เพราะ Y", "ไปต่อไม่ได้" | `/solo:block <n> "<reason>"` |
