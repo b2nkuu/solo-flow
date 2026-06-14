@@ -56,7 +56,7 @@ You don't need `/solo:init` to start capturing — `/solo:capture` works out of 
 | `/solo:today` | Show today's focus list | — |
 | `/solo:start` | Mark in-progress + create branch (single issue), or run every planned issue through a Workflow (`workflow` shape) | `<issue#> \| workflow` |
 | `/solo:test` | Walk the test plan, run or verify each item, tick passed | `<issue#>` |
-| `/solo:done` | Record outcome + close | `<issue#>` |
+| `/solo:done` | Record outcome + close (refuses on unticked AC/Test Plan unless `--force`) | `<issue#> [--force]` |
 | `/solo:note` | Append a timestamped note | `<issue#> "text"` |
 | `/solo:block` | Mark blocked with a reason | `<issue#> "reason"` |
 | `/solo:unblock` | Resume a blocked task | `<issue#> ["resolution"]` |
@@ -82,7 +82,7 @@ Every issue body has an `## Acceptance` and `## Test Plan` section. They start b
 - **At plan time.** `/solo:plan` asks once per item if you want it to suggest Acceptance Criteria and a Test Plan from the title, the `## What` line, and the issue's `type:*`. You can accept (`Y`), paste your own (`edit`), or skip — nothing is written without confirmation.
 - **At start time.** `/solo:start` prints both sections after creating the branch so you see the goalposts and verification steps as you switch into the work.
 - **At verify time.** `/solo:test <n>` walks the `## Test Plan` one item at a time, suggests a concrete way to verify each (a command to run, or "manual — verify yourself" for UI checks), and ticks what passes. Failures stay unticked and get a one-line note in `## Notes`. No status label changes — this is a verification pass, not a workflow step.
-- **At close time.** `/solo:done` lists every remaining unticked checklist item alongside the outcome prompt and offers `Tick all? [Y/edit/n]` — the common "everything done" case is one keystroke; `edit` lets you tick a subset per section.
+- **At close time.** `/solo:done` lists every remaining unticked checklist item alongside the outcome prompt and offers `Tick all? [Y/edit/n]` — the common "everything done" case is one keystroke; `edit` lets you tick a subset per section. If any AC or Test Plan item is still `- [ ]` after the prompt, `/solo:done` refuses to close — "closed" means the work and its verification both completed. Pass `--force` to override (e.g. an AC item that has genuinely gone obsolete); the slip is recorded in `## Notes` as `[done-forced]`.
 
 The sections stay parseable Markdown checkboxes, so the issue page on GitHub doubles as the audit trail for what was promised, what was tested, and what shipped.
 
