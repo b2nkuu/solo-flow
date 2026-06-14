@@ -13,6 +13,7 @@ Cut a release from trunk in one command. Tag, generate notes from closed issues,
 `$ARGUMENTS` — optional. Recognized:
 
 - `--dry-run` — print the preview and stop. No tag, no push, no GitHub Release, no milestone changes.
+- `--include-all-closes` — restore previous Step 5 behavior: include every issue closed since the previous tag in Notes, regardless of milestone. Default scopes Notes to the chosen milestone only.
 
 Anything else: ignore (no version flags, no `--milestone`, no `--patch` — keep the surface tiny).
 
@@ -33,6 +34,16 @@ All must pass — no overrides:
 - Current branch == `trunk.name`. If not: stop with `❌ /solo:release must run on <trunk>. git switch <trunk>.`
 - Working tree clean (`git status --porcelain` empty). If not: stop with `❌ working tree dirty. commit or stash first.`
 - Local trunk in sync with `origin/<trunk>` (`git fetch origin <trunk>` then compare `HEAD` vs `origin/<trunk>`). If behind or diverged: stop with `❌ <trunk> not in sync with origin. git pull first.`
+- **No open PR closes an issue in the chosen milestone.** After Step 3 has resolved the milestone, list open PRs and scan each body for `Closes #<n>` (case-insensitive, also matches `Fixes #<n>` / `Resolves #<n>`). For every `<n>` referenced, look up the issue and check `milestone.title == <chosen milestone>`. If any match, stop with:
+  ```
+  ❌ open PRs still close issues in milestone <name>:
+       PR #<pr> closes #<n> <issue title>
+       …
+     Merge or detach them before releasing.
+  ```
+  This prevents silent ship failure where `/solo:done` closed the issue but the PR carrying the code is still open — trunk has no code, but Notes would announce it shipped. Skip this guard if no milestone was chosen.
+
+> Note: this guard runs after Step 3 (milestone resolution) even though it is listed here for grouping with the other invariants. Implementations may evaluate it immediately after the milestone is known.
 
 ### 3. Resolve milestone to close
 
@@ -75,7 +86,11 @@ gh issue list --repo <owner/repo> --state closed --limit 500 \
   --json number,title,labels,closedAt,milestone
 ```
 
-In memory: keep issues with `closedAt > SINCE` (or all closed issues if no previous tag). Group by `type:*` label:
+In memory: keep issues with `closedAt > SINCE` (or all closed issues if no previous tag). Then **scope to the chosen milestone by default**: keep only issues whose `milestone.title == <chosen milestone>`. If no milestone was chosen in Step 3, keep all closed-since-prev-tag issues (nothing to scope to).
+
+If `--include-all-closes` was passed, skip the milestone-scope filter and keep every closed-since-prev-tag issue (previous behavior).
+
+Group the remaining issues by `type:*` label:
 
 - `type:feature` → **Features**
 - `type:bug` → **Fixes**
@@ -104,7 +119,7 @@ Notes:
   - #53 fix typo
 ```
 
-The ⚠ block only appears when a milestone was chosen AND there are closed issues outside it since the previous tag.
+The ⚠ block only appears when a milestone was chosen AND there are orphan issues. **Orphan = closed since previous tag AND (`milestone == null` OR `milestone.title != <chosen milestone>`)**. Enumerate orphans independently of the `--include-all-closes` flag — the warning reflects repo hygiene, not what ends up in Notes.
 
 **Block conditions** (stop with error, do not proceed):
 
@@ -191,11 +206,14 @@ Then update `.solo/config.yml` `milestone.current:` to the new name (or empty st
 | Not on trunk | Stop |
 | Dirty work tree | Stop |
 | Trunk not in sync with origin | Stop |
+| Open PR body has `Closes #<n>` for an issue in the chosen milestone | Stop (list offending PRs) |
 | `milestone.required: true` + unfinished issues in milestone | Stop |
 | `milestone.required: true` + closed issues since last tag without milestone | Stop |
 | `milestone.required: false` + same conditions | Warn, proceed on confirm |
 | `milestone.required: false` | Omit step 9 entirely (no next-milestone prompt, suggest, or config update) |
 | Tag already exists locally or remotely | Stop with hint to pick a new version |
+
+**Notes scope** (Step 5): Release Notes are scoped to the chosen milestone by default — only closed-since-prev-tag issues with `milestone.title == <chosen milestone>` appear. Pass `--include-all-closes` to fall back to the old behavior (every closed-since-prev-tag issue, regardless of milestone). The ⚠ orphan list in the preview is independent of this flag.
 
 ## Notes
 
