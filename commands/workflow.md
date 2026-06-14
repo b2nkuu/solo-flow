@@ -70,7 +70,7 @@ Every refusal aborts the whole batch — no partial flips, no partial branches, 
      …
      Break them down with /solo:plan first.
   ```
-- Any issue's body has no real Acceptance or Test Plan content (the section is missing, or contains only the single empty `- [ ]` placeholder — same heuristic as `/solo:done` step 3) → list them and stop:
+- Any issue's body has no real Acceptance or Test Plan content — a section is "missing" only when the heading is absent **or** the section's only checklist line is the single empty `- [ ]` placeholder (same skippable heuristic as `/solo:done` step 3). A section with at least one real `- [ ]` or `- [x]` item counts as present. → list them and stop:
   ```
   ⚠ Missing AC or Test Plan:
      #<n> <title> (no AC)
@@ -94,7 +94,7 @@ Show the batch and ask once:
 Start? [y/N]
 ```
 
-Anything other than `y` (case-insensitive) → abort.
+Anything other than `y` (case-insensitive) → abort. The batch confirm is strict — Thai/informal tokens like `ครับ` / `ใช่` are **not** accepted here (the assistant skill's softer confirm vocabulary applies to skill-mediated conversations, not to this command's prompt).
 
 ### 5. Sync trunk
 
