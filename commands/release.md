@@ -181,7 +181,7 @@ Only when `milestone.required: true`, after closing, ask:
 Open next milestone? [Y/n] (suggest: v<next>)
 ```
 
-Suggested name: increment the closed milestone's last numeric segment by one (e.g. `v0.3` → `v0.4`, `v0.3.0` → `v0.4.0`). If no milestone was closed, suggest `release.initial_version`.
+Suggested name: **minor bump** of the closed milestone (e.g. `v0.3` → `v0.4`, `v0.3.0` → `v0.4.0`). Concretely: for `vX.Y` → `vX.(Y+1)`; for `vX.Y.Z` → `vX.(Y+1).0`. Patch milestones (e.g. `v0.3.1`) are not auto-suggested — patch tags belong to the hotfix flow (see Notes) and do not create or close a milestone. If no milestone was closed, suggest `release.initial_version`.
 
 User can accept, type a custom name, or `n` to skip.
 
@@ -220,5 +220,5 @@ Then update `.solo/config.yml` `milestone.current:` to the new name (or empty st
 
 ## Notes
 
-- Solo follows trunk-based development: no release branches. Hotfix = new commit on trunk + new patch tag. If the user asks for a release branch, explain why solo does not support it (link to README's Releases section).
+- Solo follows trunk-based development: no release branches. Hotfix = new commit on trunk + new patch tag. Patch tags (e.g. `v0.3.1`) ship through the hotfix flow and do **not** create or close a milestone — milestones track minor/major scope only (`x.(y+1).0`). If the user asks for a release branch, explain why solo does not support it (link to README's Releases section).
 - Never `git push --force`. Never delete tags.
