@@ -153,6 +153,7 @@ solo ใช้ [trunk-based development](https://trunkbaseddevelopment.com/):
 - **Branch จาก trunk เสมอ** — `/solo:start` pull trunk ล่าสุดก่อน branch
 - **Branch อายุสั้น (≤ 2 วัน)** — `/solo:today` และ `/solo:status` เตือนเมื่องาน in-progress ค้างนาน
 - **One issue → one branch → one PR** — ห้ามรวม
+- **Branch convention 5 prefix** — `feat/<n>-<slug>` (`type:feature`), `fix/<n>-<slug>` (`type:bug`), `chore/<n>-<slug>` (`type:task`/`type:idea`), `spike/<n>-<slug>` (`type:research`), `release/<version>` (`/solo:release` manifest bump เท่านั้น). Pattern ใน config = `{prefix}/{issue}-{slug}`
 - **Feature flags ดีกว่า branch ยาว** — งานหลายสัปดาห์ใช้ flag gate แล้ว merge เข้า trunk ต่อเนื่อง
 - **Release = tag จาก trunk** — `/solo:release` ตัด tag ตรงจาก trunk. ไม่มี release branch. Hotfix = commit ใหม่บน trunk + patch tag
 - **Milestone group ให้ release** — ทุก issue ผูก `milestone.current` (strict mode = default; ปิดผ่าน `milestone.required: false`)

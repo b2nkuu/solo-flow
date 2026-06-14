@@ -187,7 +187,7 @@ If `milestone.required: false`, those become warnings only — proceed.
 
 ### 8. Confirm or dry-run
 
-- `--dry-run` → the preview above (step 7) already includes the detected manifest path, current version, and target version on the `Manifest:` line. Stop here. Print `(dry-run — nothing pushed. no branch, no commit, no PR, no tag.)` and exit. **No** `feature/release-*` branch is created, no commit is made, no PR is opened, no tag is pushed.
+- `--dry-run` → the preview above (step 7) already includes the detected manifest path, current version, and target version on the `Manifest:` line. Stop here. Print `(dry-run — nothing pushed. no branch, no commit, no PR, no tag.)` and exit. **No** `release/*` branch is created, no commit is made, no PR is opened, no tag is pushed.
 - Else: `Proceed? [y/N]` — only `y` proceeds.
 
 ### 9. Bump manifest version (skip if no manifest, or already at target)
@@ -200,12 +200,12 @@ Run this step **after** the user confirms in step 8 and **before** tagging in st
 
 Otherwise:
 
-1. **Create the bump branch from trunk.** The branch name is `feature/release-<next-version>` (no `v` prefix, matches `<next-version>` as resolved in step 4). If a local or remote branch with that name already exists, stop with:
+1. **Create the bump branch from trunk.** The branch name is `release/<next-version>` (no `v` prefix, matches `<next-version>` as resolved in step 4). If a local or remote branch with that name already exists, stop with:
    ```
-   ❌ branch feature/release-<next-version> already exists. delete it or pick a different version.
+   ❌ branch release/<next-version> already exists. delete it or pick a different version.
    ```
    ```bash
-   git switch -c feature/release-<next-version> <trunk>
+   git switch -c release/<next-version> <trunk>
    ```
 2. **Edit the manifest in place** to set `version` to `<next-version>`. Use the format-specific editor decided in step 5 (JSON for `.json`, line replace for `Cargo.toml` / `pyproject.toml`). Verify the file still parses after the edit.
 3. **Commit** with exactly:
@@ -219,11 +219,11 @@ Otherwise:
    ```
 4. **Push and open a PR** against trunk:
    ```bash
-   git push -u origin feature/release-<next-version>
+   git push -u origin release/<next-version>
    gh pr create \
      --repo <owner/repo> \
      --base <trunk> \
-     --head feature/release-<next-version> \
+     --head release/<next-version> \
      --title "chore(release): bump <manifest-path> to <next-version>" \
      --body "Bumps \`<manifest-path>\` from \`<current-version>\` to \`<next-version>\` for the upcoming release.\n\nOpened by /solo:release."
    ```

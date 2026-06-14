@@ -105,7 +105,7 @@ When the planned backlog is small but non-trivial — a typical solo sprint — 
 
 One pipeline per issue, all in parallel (capped at `workflow.max_parallel`, default 4):
 
-1. **Claim** — atomically flip `status:planned` → `status:in-progress`, create a `task/<n>-<slug>` branch off trunk, and a dedicated worktree at `.solo/worktrees/<n>/`. Issues are claimed only as a slot frees up, so killing the workflow mid-batch leaves uncalled issues untouched.
+1. **Claim** — atomically flip `status:planned` → `status:in-progress`, create a `<prefix>/<n>-<slug>` branch off trunk (`feat`/`fix`/`chore` per type — see the Branch conventions section), and a dedicated worktree at `.solo/worktrees/<n>/`. Issues are claimed only as a slot frees up, so killing the workflow mid-batch leaves uncalled issues untouched.
 2. **Plan** — derive a subtask list from the issue's `## What` + `## Acceptance` + `## Test Plan`; refuse to proceed unless every Acceptance item is covered.
 3. **Implement** — work the subtasks serially inside the issue's own worktree (no cross-issue file conflicts when other pipelines run in parallel).
 4. **Verify** — walk `## Test Plan` like `/solo:test`; tick `[x]` for pass, loop back to Implement (up to `workflow.max_retries`) for fail.
@@ -129,7 +129,7 @@ defaults:
 
 branch:
   enabled: true
-  pattern: "{type}/{issue}-{slug}"
+  pattern: "{prefix}/{issue}-{slug}"
 
 note:
   storage: "comment"
@@ -164,6 +164,22 @@ trunk:
   name: "main"
   max_branch_age_days: 2
 ```
+
+### Branch conventions
+
+solo uses five branch prefixes — aligned with Conventional Commits — so a glance at a branch name tells you what kind of work it carries:
+
+| type label | prefix | What it's for |
+|---|---|---|
+| `type:feature` | `feat/` | New behaviour, observable to users |
+| `type:bug` | `fix/` | Defect repair |
+| `type:task`, `type:idea` | `chore/` | Specs, refactors, docs, misc plumbing |
+| `type:research` | `spike/` | Exploration, time-boxed, may not ship |
+| — | `release/` | Reserved for `/solo:release`'s manifest bump branch (`release/<version>`) |
+
+Per-issue work branches are built from `{prefix}/{issue}-{slug}` (see the `branch.pattern` config). The `<prefix>` is resolved from the issue's `type:*` label at branch-creation time by `/solo:start` and `/solo:workflow`. `release/<version>` is created only by `/solo:release` when a manifest bump is needed (see `commands/release.md` step 9) — it never carries an issue number.
+
+If you set a custom `branch.pattern` that still uses the legacy `{type}` placeholder, the raw type name (`feature`, `bug`, `task`, …) is substituted for backward compatibility, but new repos should use `{prefix}`.
 
 ## Releases & milestones
 
