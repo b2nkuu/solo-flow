@@ -69,7 +69,7 @@ Always ask:
 Next version (latest: <tag-or-none>, suggest: <suggested>):
 ```
 
-User can accept the suggestion (enter) or type any value. Validate it matches `^v?\d+\.\d+\.\d+$`. Re-ask on bad input.
+User can accept the suggestion (enter) or type any value. Validate it matches `^v?\d+\.\d+\.\d+$` — pre-release suffixes (`-rc1`, `-beta`, etc.) are not accepted. Re-ask on bad input with: `❌ pre-release suffixes not supported. Use plain semver (e.g. v0.4.0).`
 
 Render the final tag using `release.tag_pattern` with `{version}` replaced by the user's input (strip a leading `v` from input first so `v{version}` doesn't double up).
 
@@ -79,14 +79,17 @@ Find issues closed since the previous tag (or since repo start if no previous ta
 
 ```bash
 PREV=<latest tag or empty>
-SINCE=$(git log -1 --format=%cI ${PREV:+$PREV})   # ISO date of prev tag commit, or empty
+SINCE=""
+[ -n "$PREV" ] && SINCE=$(git log -1 --format=%cI "$PREV")   # ISO date of prev tag commit, or empty when no prior tag
 
-# fetch closed issues, then filter by closedAt > SINCE
+# fetch closed issues, then filter by closedAt > SINCE (only when SINCE is non-empty)
 gh issue list --repo <owner/repo> --state closed --limit 500 \
   --json number,title,labels,closedAt,milestone
 ```
 
-In memory: keep issues with `closedAt > SINCE` (or all closed issues if no previous tag). Then **scope to the chosen milestone by default**: keep only issues whose `milestone.title == <chosen milestone>`. If no milestone was chosen in Step 3, keep all closed-since-prev-tag issues (nothing to scope to).
+In memory: if `SINCE` is non-empty, keep issues with `closedAt > SINCE`. If `SINCE` is empty (no previous tag), keep **all** closed issues — the latent bug to avoid is letting `SINCE` default to `HEAD`'s commit date, which would filter every issue out.
+
+Then **scope to the chosen milestone by default**: keep only issues whose `milestone.title == <chosen milestone>`. If no milestone was chosen in Step 3, keep every issue that passed the SINCE filter (nothing to scope to).
 
 If `--include-all-closes` was passed, skip the milestone-scope filter and keep every closed-since-prev-tag issue (previous behavior).
 
