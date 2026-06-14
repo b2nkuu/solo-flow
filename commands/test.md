@@ -1,14 +1,14 @@
 ---
-description: Walk through an issue's Test Plan, run or verify each item, tick what passes
+description: Walk through an issue's Acceptance + Test Plan, run or verify each item, tick what passes
 argument-hint: "<issue-number>"
 allowed-tools: [Bash]
 ---
 
 # /solo:test
 
-Walk through every item under `## Test Plan` on an issue, decide per item (run a command, manual verify, fail, or skip), and tick what passed back into the body.
+Walk through every item under `## Acceptance` **and** `## Test Plan` on an issue, decide per item (run a command, manual verify, fail, or skip), and tick what passed back into the body.
 
-Use this after the work is done but before `/solo:done` — it converts a list of intentions into a checked record of what was actually verified.
+Use this after the work is done but before `/solo:done` — it converts both the promised acceptance criteria and the verification plan from intentions into a checked record of what was actually verified. AC and Test Plan get the same per-item rigor; closing should mean every promise + every verification was inspected one by one.
 
 ## Input
 
@@ -28,29 +28,51 @@ gh issue view <n> --repo <owner/repo> --json number,title,body,labels,state
 ```
 
 - If the issue is already closed → friendly note `ℹ️  #<n> is closed.` and continue (user may be re-verifying).
-- Parse `## Test Plan`. If it is missing or contains only the empty `- [ ]` placeholder, stop with:
+- Parse both `## Acceptance` and `## Test Plan`. A section is **skippable** if it is missing or contains only the empty `- [ ]` placeholder.
+- If **both** sections are skippable, stop with:
   ```
-  ❌ #<n> has no test plan. Run /solo:plan to generate one, or edit the issue body to add items.
+  ❌ #<n> has nothing to test — both Acceptance and Test Plan are empty. Run /solo:plan to generate them, or edit the issue body to add items.
   ```
+- If only one section is skippable, walk only the non-skippable one and mention the skip in the header (step 3).
 
 ### 3. Show the plan
 
-List every item with an index and current tick state:
+List the non-skippable sections in order — **Acceptance first, then Test Plan** — each with its own index restarting at `[1]`:
 
 ```
-🧪 #<n> <title> — Test Plan (<N> items)
-   [1] [<x or space>] <item 1>
-   [2] [<x or space>] <item 2>
-   …
+🧪 #<n> <title>
+   Acceptance (<N> items)
+     [1] [<x or space>] <ac item 1>
+     [2] [<x or space>] <ac item 2>
+     …
+   Test Plan (<M> items)
+     [1] [<x or space>] <tp item 1>
+     [2] [<x or space>] <tp item 2>
+     …
 ```
+
+If a section was skipped because it was skippable, omit its block and add a single line like `(Acceptance is empty — skipping)` or `(Test Plan is empty — skipping)`.
 
 ### 4. Walk items one at a time
 
-For each item in order, do steps 4a–4c.
+Walk **Acceptance first**, then Test Plan. Index restarts at `1` per section. For each item, do steps 4a–4c. The prompt header in 4b should clarify which section the item belongs to.
 
 #### 4a. Suggest how to verify
 
-Read the item text together with the issue title, `## What`, and `type:*` label. Output a single concrete suggestion:
+Read the item text together with the issue title, `## What`, and `type:*` label. The suggestion depends on which section the item is in:
+
+**For Acceptance items** — the question is "does the current implementation satisfy this AC?" Propose a way to **inspect the implementation**, not a test runner invocation:
+
+- If the AC names a concrete behavior or symbol (e.g. `function X returns Y`, `endpoint /foo returns 200`, `CLI flag --bar is parsed`) → propose a `grep` / `rg` / code lookup that locates the relevant code. Examples:
+  - `function shouldGate returns true when…` → `rg -n 'function shouldGate|shouldGate\s*=' <likely-dir>`
+  - `/solo:done refuses to close when AC unticked` → `rg -n 'unticked|completion gate' commands/done.md`
+  - `Endpoint /users requires auth` → `rg -n 'router\.(get|post).*users' src/`
+- If the AC is inherently a UX/visual/manual promise (e.g. "error message is friendly", "UI shows green checkmark") → output `(manual — verify yourself)`.
+- If you cannot infer a meaningful inspection → output `(no suggestion — choose manual or skip)`.
+
+Do **not** propose `bun test ...`, `pytest`, `cargo test`, or other test-runner commands for AC items — that is Test Plan's job. AC verification is "look at the implementation and confirm it does the thing."
+
+**For Test Plan items** — the question is "does running this verification pass?" Propose an executable command when possible:
 
 - If the item names a concrete code path or behavior → propose a shell command (test runner, lint, type check, curl, etc.) that exercises it. Examples:
   - `Unit: serializer outputs correct columns` → `bun test src/serializer.test.ts` (use the project's actual test runner — read `package.json` / `Cargo.toml` / `pyproject.toml` if needed).
@@ -64,14 +86,15 @@ Never invent file paths or commands that depend on tools the project clearly doe
 #### 4b. Prompt
 
 ```
-[<i>/<N>] <item text>
+[<Section> <i>/<N>] <item text>
    suggested: <command or "(manual — verify yourself)">
    [r]un / [m]anual / [f]ail / [s]kip
 ```
 
-Omit `r` from the choices when there is no command to run.
+`<Section>` is `AC` for Acceptance items, `TP` for Test Plan items. Omit `r` from the choices when there is no command to run.
 
 - **r** — execute the suggested command via the Bash tool. Stream the result. Treat exit code `0` as pass, anything else as fail. Capture the last ~10 lines of combined stdout/stderr for the summary.
+  - For AC items, `r` runs the proposed `grep` / `rg` / lookup. Treat a non-zero exit (no match) as fail — the user picked grep because they expected to see the implementation.
 - **m** — the user confirms the check passed manually (no command run). Mark pass.
 - **f** — the user confirms it failed. Prompt once: `Failure note (enter to skip):`. Mark fail.
 - **s** — leave the item exactly as it was; do not change its tick state.
@@ -80,7 +103,7 @@ If the user provides a different command (e.g. they paste `bun test --watch ...`
 
 #### 4c. Record the per-item result
 
-In memory, hold a tuple `(index, decision, note?)` for each item. Do not write to GitHub yet — batch the body edit at the end so a mid-walk abort leaves the issue clean.
+In memory, hold a tuple `(section, index, decision, note?)` for each item — `section` is `ac` or `tp`. Do not write to GitHub yet — batch the body edit at the end so a mid-walk abort leaves the issue clean.
 
 ### 5. Apply ticks
 
@@ -127,7 +150,9 @@ If `<F> == 0` and every item is now ticked, add:
 
 ## Design constraints
 
-- **Never auto-run without `r`.** The user picks `r` explicitly per item; you do not chain runs across items.
+- **Walk AC and TP with equal rigor.** Both are checkboxes the user promised. Both deserve per-item inspection before close.
+- **AC suggestions look at implementation; TP suggestions run verifications.** Don't blur the two — AC asks "does the code do this?", TP asks "does this check pass?"
+- **Never auto-run without `r`.** The user picks `r` explicitly per item or section; you do not chain runs across items.
 - **Never tick fail items.** A failed step is the truth — surface it.
 - **Batch the body write.** All ticks + the Notes line go in one `gh issue edit --body-file` call after the walk.
 - **Read-only on issue body until the end.** This makes `Ctrl-C` mid-walk safe.
