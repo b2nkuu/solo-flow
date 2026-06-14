@@ -13,6 +13,7 @@ Cut a release from trunk in one command. Tag, generate notes from closed issues,
 `$ARGUMENTS` — optional. Recognized:
 
 - `--dry-run` — print the preview and stop. No tag, no push, no GitHub Release, no milestone changes.
+- `--include-all-closes` — restore previous Step 5 behavior: include every issue closed since the previous tag in Notes, regardless of milestone. Default scopes Notes to the chosen milestone only.
 
 Anything else: ignore (no version flags, no `--milestone`, no `--patch` — keep the surface tiny).
 
@@ -75,7 +76,11 @@ gh issue list --repo <owner/repo> --state closed --limit 500 \
   --json number,title,labels,closedAt,milestone
 ```
 
-In memory: keep issues with `closedAt > SINCE` (or all closed issues if no previous tag). Group by `type:*` label:
+In memory: keep issues with `closedAt > SINCE` (or all closed issues if no previous tag). Then **scope to the chosen milestone by default**: keep only issues whose `milestone.title == <chosen milestone>`. If no milestone was chosen in Step 3, keep all closed-since-prev-tag issues (nothing to scope to).
+
+If `--include-all-closes` was passed, skip the milestone-scope filter and keep every closed-since-prev-tag issue (previous behavior).
+
+Group the remaining issues by `type:*` label:
 
 - `type:feature` → **Features**
 - `type:bug` → **Fixes**
@@ -104,7 +109,7 @@ Notes:
   - #53 fix typo
 ```
 
-The ⚠ block only appears when a milestone was chosen AND there are closed issues outside it since the previous tag.
+The ⚠ block only appears when a milestone was chosen AND there are orphan issues. **Orphan = closed since previous tag AND (`milestone == null` OR `milestone.title != <chosen milestone>`)**. Enumerate orphans independently of the `--include-all-closes` flag — the warning reflects repo hygiene, not what ends up in Notes.
 
 **Block conditions** (stop with error, do not proceed):
 
