@@ -33,9 +33,11 @@ gh issue view <n> --repo <owner/repo> --json number,title,body,labels,state
 
 If already closed → `ℹ️  #<n> already closed.` and stop.
 
-### 3. Ask once for outcome + acceptance + test plan (optional)
+### 3. Confirm final tick state + ask for outcome (optional)
 
 Parse both `## Acceptance` and `## Test Plan` from the body. For each section, list every `- [ ]` / `- [x]` item with an index. A section is "skippable" if it is missing or contains only the empty `- [ ]` placeholder — drop it from the prompt entirely. If both sections are skippable, jump straight to the outcome question.
+
+`/solo:test` is the recommended way to verify both sections **before** `/solo:done`: it walks AC and Test Plan item by item, suggests grep/code lookups for AC and run/manual checks for TP, and ticks what passed. If the user already ran `/solo:test`, most items here will already be `- [x]` — this prompt is a final confirmation, not a first-touch verification. The completion gate in step 4a will catch anything still left.
 
 Prompt in one block (omit any skippable section):
 
@@ -49,21 +51,21 @@ Test Plan items (<M>):
   1. [<x or space>] <item 1>
   …
 
-Tick all? [Y/edit/n]
+Tick any remaining? [Y/edit/n]
 One-line outcome (enter to skip):
 ```
 
-`Tick all?` covers both sections as a single decision (the common case: the work is done, everything ticks). Read the responses (Y/edit/n is the first line, outcome is the second). If the user types nothing for outcome, skip the outcome step. Hold all decisions for step 4.
+`Tick any remaining?` is a final confirmation across both sections. If `/solo:test` was run, most items are already ticked and `Y` is a no-op for those. Read the responses (Y/edit/n is the first line, outcome is the second). If the user types nothing for outcome, skip the outcome step. Hold all decisions for step 4.
 
-Tick handling:
-- **Y** (default) — set every `- [ ]` under `## Acceptance` AND `## Test Plan` to `- [x]`. Already-ticked items stay ticked.
-- **edit** — re-prompt separately so the user can tick a subset of each section:
+Tick handling (applied uniformly to AC and TP — both have been through the same `/solo:test` rigor, so neither is special):
+- **Y** (default) — set every still-unticked `- [ ]` under `## Acceptance` AND `## Test Plan` to `- [x]`. Already-ticked items stay ticked. This is a no-op when `/solo:test` already covered everything.
+- **edit** — re-prompt separately so the user can tick a subset of the remaining items in each section:
   ```
   Acceptance tick which? (e.g. "1,3,4", "all", "none")
   Test plan tick which? (e.g. "1,2", "all", "none")
   ```
   Parse comma-separated indices per section. `all` ticks every item in that section; `none` leaves it. Invalid/out-of-range indices are ignored with a one-line warning.
-- **n** — leave both sections unchanged.
+- **n** — leave both sections unchanged. Use this when you intentionally want the completion gate to fire (e.g. you know an AC item is unmet and you'll `--force` close).
 
 If a section was skippable, treat it as if `none` was chosen for that section (no edits to it).
 
