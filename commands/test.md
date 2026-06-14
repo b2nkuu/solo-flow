@@ -107,53 +107,61 @@ In memory, hold a tuple `(section, index, decision, note?)` for each item — `s
 
 ### 5. Apply ticks
 
-Fetch the body, rewrite the `## Test Plan` block in place:
+Fetch the body, rewrite **both** the `## Acceptance` block and the `## Test Plan` block in place (only the sections that were walked):
 
-- For every item the walk marked `pass` (whether by `r` exit 0 or `m`), change `- [ ] ` to `- [x] `.
-- For `fail`, force the item to `- [ ] ` (untick it even if it was previously ticked — failing now is the truth).
+- For every item the walk marked `pass` (whether by `r` exit 0 or `m`), change `- [ ] ` to `- [x] ` in its own section.
+- For `fail`, force the item to `- [ ] ` in its own section (untick it even if it was previously ticked — failing now is the truth).
 - For `skip`, leave the line unchanged.
+
+A failed AC item unticks the AC line; a failed TP item unticks the TP line. Never cross sections — index `2` in AC and index `2` in TP are independent.
 
 Use the same body-fetch / edit-in-place / `gh issue edit --body-file` pattern as `/solo:start` and `/solo:done`.
 
 ### 6. Record a Notes entry
 
-Append a single line under `## Notes` (one section edit, batched with step 5):
+Append a single line under `## Notes` (one section edit, batched with step 5), summarising **both** sections in a single bullet:
 
 ```
-- <YYYY-MM-DD>: [test] <P> pass / <F> fail / <S> skip
+- <YYYY-MM-DD>: [test] AC <P_ac> pass / <F_ac> fail / <S_ac> skip / TP <P_tp> pass / <F_tp> fail / <S_tp> skip
 ```
 
-If `<F> > 0`, also append a sub-line per failure with the user's note (or `(no note)`):
+If a section was skipped because it was skippable, omit its half (e.g. `[test] TP 3 pass / 0 fail / 0 skip` when AC was empty; `[test] AC 4 pass / 0 fail / 1 skip` when TP was empty).
+
+If `<F_ac> + <F_tp> > 0`, also append a sub-line per failure with the user's note (or `(no note)`), tagged with section + index so the failing item is unambiguous:
 
 ```
-- <YYYY-MM-DD>: [test] 3 pass / 1 fail / 0 skip
-  - failed [2]: <failure note>
+- <YYYY-MM-DD>: [test] AC 4 pass / 0 fail / 1 skip / TP 3 pass / 1 fail / 0 skip
+  - failed [TP 2]: <failure note>
 ```
 
 ### 7. Summary
 
 ```
-🧪 #<n>: <P> pass / <F> fail / <S> skip
+🧪 #<n>: AC <P_ac>/<N>, TP <P_tp>/<M>
 ```
 
-If `<F> > 0`, add a second line nudging next steps:
+`<N>` is total Acceptance items walked, `<M>` is total Test Plan items walked. Omit a half when its section was skippable (e.g. `🧪 #<n>: TP 3/3` when AC was empty).
+
+If `<F_ac> + <F_tp> > 0`, add a second line nudging next steps:
 
 ```
    ↳ /solo:note <n> "[blocked] <reason>" if you're stuck, or fix and rerun /solo:test <n>.
 ```
 
-If `<F> == 0` and every item is now ticked, add:
+If `<F_ac> + <F_tp> == 0` and every walked item is now ticked, add:
 
 ```
-✅ Test Plan complete — ready for /solo:done <n>.
+✅ Acceptance + Test Plan complete — ready for /solo:done <n>.
 ```
+
+(Drop the missing half from that line too — e.g. `✅ Test Plan complete — ready for /solo:done <n>.` when only TP was walked.)
 
 ## Design constraints
 
 - **Walk AC and TP with equal rigor.** Both are checkboxes the user promised. Both deserve per-item inspection before close.
 - **AC suggestions look at implementation; TP suggestions run verifications.** Don't blur the two — AC asks "does the code do this?", TP asks "does this check pass?"
 - **Never auto-run without `r`.** The user picks `r` explicitly per item or section; you do not chain runs across items.
-- **Never tick fail items.** A failed step is the truth — surface it.
-- **Batch the body write.** All ticks + the Notes line go in one `gh issue edit --body-file` call after the walk.
+- **Never tick fail items.** A failed step is the truth — surface it, regardless of which section it's in.
+- **Batch the body write.** All ticks (both sections) + the Notes line go in one `gh issue edit --body-file` call after the walk.
 - **Read-only on issue body until the end.** This makes `Ctrl-C` mid-walk safe.
 - **Don't change `status:*` labels.** This command verifies; it does not advance the workflow. Use `/solo:done` to close.
