@@ -183,9 +183,59 @@ If `milestone.required: false`, those become warnings only — proceed.
 - `--dry-run` → stop here. Print `(dry-run — nothing pushed.)` and exit.
 - Else: `Proceed? [y/N]` — only `y` proceeds.
 
-### 9. Bump manifest version
+### 9. Bump manifest version (skip if no manifest, or already at target)
 
-Reserved for the manifest bump flow (filled in by the bump-branch step). If no manifest was detected in step 5, skip entirely. Otherwise this step must complete before step 10 so the tag's commit contains the bumped manifest.
+Run this step **after** the user confirms in step 8 and **before** tagging in step 10. Skipping rules:
+
+- No manifest detected in step 5 → skip (don't print anything, just move on).
+- Manifest detected but already at `<next-version>` → print one line `↳ manifest <manifest-path> already at <next-version> — skip bump` and move on.
+- `--dry-run` mode → already exited in step 8; this step never runs in dry-run.
+
+Otherwise:
+
+1. **Create the bump branch from trunk.** The branch name is `feature/release-<next-version>` (no `v` prefix, matches `<next-version>` as resolved in step 4). If a local or remote branch with that name already exists, stop with:
+   ```
+   ❌ branch feature/release-<next-version> already exists. delete it or pick a different version.
+   ```
+   ```bash
+   git switch -c feature/release-<next-version> <trunk>
+   ```
+2. **Edit the manifest in place** to set `version` to `<next-version>`. Use the format-specific editor decided in step 5 (JSON for `.json`, line replace for `Cargo.toml` / `pyproject.toml`). Verify the file still parses after the edit.
+3. **Commit** with exactly:
+   ```
+   chore(release): bump <manifest-path> to <next-version>
+   ```
+   Stage only the manifest file. One commit, one line, no body.
+   ```bash
+   git add <manifest-path>
+   git commit -m "chore(release): bump <manifest-path> to <next-version>"
+   ```
+4. **Push and open a PR** against trunk:
+   ```bash
+   git push -u origin feature/release-<next-version>
+   gh pr create \
+     --repo <owner/repo> \
+     --base <trunk> \
+     --head feature/release-<next-version> \
+     --title "chore(release): bump <manifest-path> to <next-version>" \
+     --body "Bumps \`<manifest-path>\` from \`<current-version>\` to \`<next-version>\` for the upcoming release.\n\nOpened by /solo:release."
+   ```
+5. **Wait for merge.** Prefer auto-merge if the repo allows it:
+   ```bash
+   gh pr merge --squash --auto <pr-number> 2>/dev/null || true
+   ```
+   Then poll `gh pr view <pr-number> --json state,mergeCommit` until `state == MERGED`. If the user aborts, leave the branch + PR in place and stop without tagging.
+6. **Pull trunk fast-forward.** Switch back to trunk and fast-forward so HEAD includes the bump:
+   ```bash
+   git switch <trunk>
+   git pull --ff-only origin <trunk>
+   ```
+   If `--ff-only` fails (trunk diverged because someone else merged), stop with:
+   ```
+   ❌ <trunk> diverged after manifest bump merged. resolve manually and re-run /solo:release.
+   ```
+
+After this step, trunk HEAD contains the bumped manifest. Proceed to tag.
 
 ### 10. Execute
 
