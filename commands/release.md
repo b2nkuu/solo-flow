@@ -23,7 +23,7 @@ Anything else: ignore (no version flags, no `--milestone`, no `--patch` — keep
 
 - `gh auth status` (stop on failure).
 - Resolve repo as usual.
-- Read `.solo/config.yml`: `trunk.name` (default `main`), `release.tag_pattern` (default `v{version}`), `release.initial_version` (default `0.1.0`), `milestone.current`, `milestone.required` (default `true`).
+- Read `.solo/config.yml`: `trunk.name` (default `main`), `release.tag_pattern` (default `v{version}`), `release.initial_version` (default `0.1.0`), `release.manifest` (optional explicit path), `milestone.current`, `milestone.required` (default `true`).
 
 ### 2. Trunk-based invariants
 
@@ -75,7 +75,38 @@ User can accept the suggestion (enter) or type any value. Validate it matches `^
 
 Render the final tag using `release.tag_pattern` with `{version}` replaced by the user's input (strip a leading `v` from input first so `v{version}` doesn't double up).
 
-### 5. Collect issues for notes
+Hold onto the resolved bare version (no `v` prefix) — referred to below as `<next-version>` — for the manifest bump step.
+
+### 5. Detect manifest (and resolve current version)
+
+Look for a versioned manifest file in this priority order:
+
+1. `release.manifest:` override from `.solo/config.yml` (explicit path, wins over everything else if the file exists and parses).
+2. `.claude-plugin/plugin.json` — Claude Code plugin manifest. Parse `.version` (JSON).
+3. `package.json` — Node. Parse `.version` (JSON).
+4. `Cargo.toml` — Rust. Parse `[package] version = "..."`.
+5. `pyproject.toml` — Python. Try `[project] version = "..."` first, then `[tool.poetry] version = "..."`.
+
+For each candidate, stop at the first one that exists *and* contains a parseable `version`. If `release.manifest:` is set but the file is missing or unparseable, stop with:
+
+```
+❌ release.manifest points to <path> but the file is missing or has no version field.
+```
+
+If no candidate is found at all, no manifest is in play — skip the manifest preview in step 7 and the bump in step 9 entirely (this matches today's behavior).
+
+When a manifest is found, record:
+
+- `<manifest-path>` — repo-relative path used in commit message and preview.
+- `<current-version>` — string parsed from the file (no `v` prefix).
+- A way to write the new version back in the same format (JSON edit for `.json`, line-level edit for `Cargo.toml` / `pyproject.toml`). Preserve surrounding formatting; don't reformat the whole file.
+
+Compare `<current-version>` to `<next-version>`:
+
+- Equal → manifest already at target. Mark "bump step: skip" and continue. The preview will note this; no branch, no PR.
+- Different → mark "bump step: run" with the planned diff `<current-version> → <next-version>`.
+
+### 6. Collect issues for notes
 
 Find issues closed since the previous tag (or since repo start if no previous tag):
 
@@ -101,7 +132,7 @@ Group the remaining issues by `type:*` label:
 - `type:bug` → **Fixes**
 - everything else (`type:task`, `type:idea`, `type:research`, no type) → **Other**
 
-### 6. Preview
+### 7. Preview
 
 ```
 📦 Release preview
@@ -110,6 +141,7 @@ Group the remaining issues by `type:*` label:
   Trunk:      <trunk> @ <short-sha>
   Milestone:  <milestone title> (<closed>/<total> closed, will close) | (none)
   Previous:   <prev-tag or "no prior release">
+  Manifest:   <manifest-path> (<current-version> → <next-version>) | (none)
 
 Notes:
   ## Features
@@ -127,6 +159,12 @@ Notes:
 Compute `<closed>` and `<total>` from the counts captured in Step 3 (`closed_issues` and `closed_issues + open_issues`). Example: `Milestone: v0.4 (3/5 closed, will close)`.
 
 The ⚠ block only appears when a milestone was chosen AND there are orphan issues. **Orphan = closed since previous tag AND (`milestone == null` OR `milestone.title != <chosen milestone>`)**. Enumerate orphans independently of the `--include-all-closes` flag — the warning reflects repo hygiene, not what ends up in Notes.
+
+The `Manifest:` line variants:
+
+- No manifest detected → `Manifest:   (none)` (and step 9 will be skipped).
+- Detected, version differs → `Manifest:   <manifest-path> (<current-version> → <next-version>)`.
+- Detected, already at target → `Manifest:   <manifest-path> (already at <next-version> — skip bump)`.
 
 **Block conditions** (stop with error, do not proceed):
 
@@ -147,12 +185,66 @@ The ⚠ block only appears when a milestone was chosen AND there are orphan issu
 
 If `milestone.required: false`, those become warnings only — proceed.
 
-### 7. Confirm or dry-run
+### 8. Confirm or dry-run
 
-- `--dry-run` → stop here. Print `(dry-run — nothing pushed.)` and exit.
+- `--dry-run` → the preview above (step 7) already includes the detected manifest path, current version, and target version on the `Manifest:` line. Stop here. Print `(dry-run — nothing pushed. no branch, no commit, no PR, no tag.)` and exit. **No** `feature/release-*` branch is created, no commit is made, no PR is opened, no tag is pushed.
 - Else: `Proceed? [y/N]` — only `y` proceeds.
 
-### 8. Execute
+### 9. Bump manifest version (skip if no manifest, or already at target)
+
+Run this step **after** the user confirms in step 8 and **before** tagging in step 10. Skipping rules:
+
+- No manifest detected in step 5 → skip (don't print anything, just move on).
+- Manifest detected but already at `<next-version>` → print one line `↳ manifest <manifest-path> already at <next-version> — skip bump` and move on.
+- `--dry-run` mode → already exited in step 8; this step never runs in dry-run.
+
+Otherwise:
+
+1. **Create the bump branch from trunk.** The branch name is `feature/release-<next-version>` (no `v` prefix, matches `<next-version>` as resolved in step 4). If a local or remote branch with that name already exists, stop with:
+   ```
+   ❌ branch feature/release-<next-version> already exists. delete it or pick a different version.
+   ```
+   ```bash
+   git switch -c feature/release-<next-version> <trunk>
+   ```
+2. **Edit the manifest in place** to set `version` to `<next-version>`. Use the format-specific editor decided in step 5 (JSON for `.json`, line replace for `Cargo.toml` / `pyproject.toml`). Verify the file still parses after the edit.
+3. **Commit** with exactly:
+   ```
+   chore(release): bump <manifest-path> to <next-version>
+   ```
+   Stage only the manifest file. One commit, one line, no body.
+   ```bash
+   git add <manifest-path>
+   git commit -m "chore(release): bump <manifest-path> to <next-version>"
+   ```
+4. **Push and open a PR** against trunk:
+   ```bash
+   git push -u origin feature/release-<next-version>
+   gh pr create \
+     --repo <owner/repo> \
+     --base <trunk> \
+     --head feature/release-<next-version> \
+     --title "chore(release): bump <manifest-path> to <next-version>" \
+     --body "Bumps \`<manifest-path>\` from \`<current-version>\` to \`<next-version>\` for the upcoming release.\n\nOpened by /solo:release."
+   ```
+5. **Wait for merge.** Prefer auto-merge if the repo allows it:
+   ```bash
+   gh pr merge --squash --auto <pr-number> 2>/dev/null || true
+   ```
+   Then poll `gh pr view <pr-number> --json state,mergeCommit` until `state == MERGED`. If the user aborts, leave the branch + PR in place and stop without tagging.
+6. **Pull trunk fast-forward.** Switch back to trunk and fast-forward so HEAD includes the bump:
+   ```bash
+   git switch <trunk>
+   git pull --ff-only origin <trunk>
+   ```
+   If `--ff-only` fails (trunk diverged because someone else merged), stop with:
+   ```
+   ❌ <trunk> diverged after manifest bump merged. resolve manually and re-run /solo:release.
+   ```
+
+After this step, trunk HEAD contains the bumped manifest. Proceed to tag.
+
+### 10. Execute
 
 Write the notes body to a temp file. Then:
 
@@ -173,9 +265,9 @@ If a milestone was chosen, close it using the `number` captured in Step 3 (no re
 gh api -X PATCH "repos/<owner/repo>/milestones/$MS_NUMBER" -f state=closed
 ```
 
-### 9. Open the next milestone
+### 11. Open the next milestone
 
-**Skip this entire step (no prompt, no suggest, no config update) when `milestone.required: false`.** Soft-milestone flow treats milestones as optional, so auto-suggesting the next one feels like coercion. Step 10 will also omit the "Next milestone:" line accordingly.
+**Skip this entire step (no prompt, no suggest, no config update) when `milestone.required: false`.** Soft-milestone flow treats milestones as optional, so auto-suggesting the next one feels like coercion. Step 12 will also omit the "Next milestone:" line accordingly.
 
 Only when `milestone.required: true`, after closing, ask:
 
@@ -195,13 +287,13 @@ gh api repos/<owner/repo>/milestones -f title="<name>" 2>/dev/null || true
 
 Then update `.solo/config.yml` `milestone.current:` to the new name (or empty string if skipped). Edit in place — don't rewrite the rest of the file.
 
-### 10. Confirm
+### 12. Confirm
 
 ```
 🚀 Released <new-tag>
    URL: <release URL from gh>
    Closed milestone: <name>           (omit line if none)
-   Next milestone: <name> (current)   (omit line if skipped OR if step 9 was skipped because milestone.required: false)
+   Next milestone: <name> (current)   (omit line if skipped OR if step 11 was skipped because milestone.required: false)
 ```
 
 ## Guards summary
@@ -215,7 +307,7 @@ Then update `.solo/config.yml` `milestone.current:` to the new name (or empty st
 | `milestone.required: true` + unfinished issues in milestone | Stop |
 | `milestone.required: true` + closed issues since last tag without milestone | Stop |
 | `milestone.required: false` + same conditions | Warn, proceed on confirm |
-| `milestone.required: false` | Omit step 9 entirely (no next-milestone prompt, suggest, or config update) |
+| `milestone.required: false` | Omit step 11 entirely (no next-milestone prompt, suggest, or config update) |
 | Tag already exists locally or remotely | Stop with hint to pick a new version |
 
 **Notes scope** (Step 5): Release Notes are scoped to the chosen milestone by default — only closed-since-prev-tag issues with `milestone.title == <chosen milestone>` appear. Pass `--include-all-closes` to fall back to the old behavior (every closed-since-prev-tag issue, regardless of milestone). The ⚠ orphan list in the preview is independent of this flag.
