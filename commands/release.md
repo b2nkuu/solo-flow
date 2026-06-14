@@ -34,6 +34,16 @@ All must pass — no overrides:
 - Current branch == `trunk.name`. If not: stop with `❌ /solo:release must run on <trunk>. git switch <trunk>.`
 - Working tree clean (`git status --porcelain` empty). If not: stop with `❌ working tree dirty. commit or stash first.`
 - Local trunk in sync with `origin/<trunk>` (`git fetch origin <trunk>` then compare `HEAD` vs `origin/<trunk>`). If behind or diverged: stop with `❌ <trunk> not in sync with origin. git pull first.`
+- **No open PR closes an issue in the chosen milestone.** After Step 3 has resolved the milestone, list open PRs and scan each body for `Closes #<n>` (case-insensitive, also matches `Fixes #<n>` / `Resolves #<n>`). For every `<n>` referenced, look up the issue and check `milestone.title == <chosen milestone>`. If any match, stop with:
+  ```
+  ❌ open PRs still close issues in milestone <name>:
+       PR #<pr> closes #<n> <issue title>
+       …
+     Merge or detach them before releasing.
+  ```
+  This prevents silent ship failure where `/solo:done` closed the issue but the PR carrying the code is still open — trunk has no code, but Notes would announce it shipped. Skip this guard if no milestone was chosen.
+
+> Note: this guard runs after Step 3 (milestone resolution) even though it is listed here for grouping with the other invariants. Implementations may evaluate it immediately after the milestone is known.
 
 ### 3. Resolve milestone to close
 
