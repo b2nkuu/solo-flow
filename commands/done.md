@@ -1,6 +1,6 @@
 ---
 description: Mark a task done — record outcome and close the issue
-argument-hint: "<issue-number>"
+argument-hint: "<issue-number> [--force]"
 allowed-tools: [Bash]
 ---
 
@@ -8,9 +8,15 @@ allowed-tools: [Bash]
 
 Finish a task: record an optional outcome line, set `completed`, flip status, close the issue.
 
+By default `/solo:done` refuses to close when any Acceptance or Test Plan item is still `- [ ]` after the tick prompt — closing should mean the work and its verification are complete. Pass `--force` (or `-f`) to override when an item has genuinely gone obsolete.
+
 ## Input
 
-`$ARGUMENTS` = issue number.
+`$ARGUMENTS` = `<issue-number> [--force]`. Recognised flags:
+
+- `--force` / `-f` — bypass the Acceptance + Test Plan completion gate (step 4a). A `[done-forced]` Notes line records what slipped through.
+
+Anything else after the issue number → warn `⚠ unknown flag: <token> (ignored)` and continue.
 
 ## Steps
 
@@ -61,6 +67,34 @@ Tick handling:
 
 If a section was skippable, treat it as if `none` was chosen for that section (no edits to it).
 
+### 4a. Completion gate
+
+After resolving step 3's tick decisions but **before** any body write, compute the final tick state each section would have if step 4 were applied (i.e. apply `Y` / `edit` / `n` in-memory). Then for each non-skippable section, list its items that would still be `- [ ]`:
+
+- `K_ac` = count of unticked items in `## Acceptance` after the would-be edits.
+- `K_tp` = count of unticked items in `## Test Plan` after the would-be edits.
+
+Skippable sections (missing or only the placeholder `- [ ]`) contribute `0` and never gate.
+
+If `K_ac + K_tp == 0` → proceed to step 4.
+
+If `K_ac + K_tp > 0` and `--force` (or `-f`) is **not** set → stop with:
+
+```
+❌ Cannot close #<n> — <K_ac + K_tp> unticked items:
+   Acceptance (<K_ac>):
+     - [ ] <item>
+     …
+   Test Plan (<K_tp>):
+     - [ ] <item>
+     …
+Tick the remaining items first, or rerun with `/solo:done --force <n>` to close anyway.
+```
+
+Omit a section's block when its count is `0`. Make no mutations — no body edit, no metadata write, no label change, no close call.
+
+If `--force` is set, proceed to step 4. The forced-close gets a Notes line appended in step 4 alongside the outcome (see below).
+
 ### 4. Apply body edits (outcome + acceptance + test plan)
 
 Edit the body in one write that covers both changes (skip the write entirely if neither applies):
@@ -70,6 +104,11 @@ Edit the body in one write that covers both changes (skip the write entirely if 
   - <YYYY-MM-DD>: [done] <outcome>
   ```
   (If `## Notes` is empty or contains only whitespace, put the bullet right under the heading.)
+- If `--force` was used to bypass step 4a, append a second Notes line summarising what slipped through:
+  ```
+  - <YYYY-MM-DD>: [done-forced] <K_ac> AC + <K_tp> Test Plan unticked at close
+  ```
+  Omit a `0`'d half (e.g. `2 AC unticked at close` when Test Plan was clean; `1 Test Plan unticked at close` when AC was clean). Use the `K_ac` / `K_tp` values from step 4a — measured **before** step 4 applied any ticks (which it won't for `n`; `Y` and `edit` flow doesn't trigger this branch because the gate would have passed).
 - If the acceptance decision was `Y` or `edit`, rewrite the `## Acceptance` block per step 3. Same for `## Test Plan`.
 
 Use the same body-fetch / edit-in-place / `gh issue edit --body-file` pattern as `/solo:start`.

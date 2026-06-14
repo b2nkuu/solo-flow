@@ -132,7 +132,7 @@ Note ธรรมดาไป comment thread. Note ที่ขึ้น `[decis
 | `/solo:today` | Focus วันนี้ + milestone progress | — |
 | `/solo:start` | Flip in-progress + branch (single), หรือ `workflow` (batch ทุก planned) | `<issue#> \| workflow` |
 | `/solo:test` | Walk test plan, run or verify, tick passed items | `<issue#>` |
-| `/solo:done` | Outcome + close + PR (optional) | `<issue#>` |
+| `/solo:done` | Outcome + close + PR (refuses on unticked AC/Test Plan; `--force` override) | `<issue#> [--force]` |
 | `/solo:note` | Append note | `<issue#> "text"` |
 | `/solo:block` | Mark blocked | `<issue#> "reason"` |
 | `/solo:unblock` | Resume | `<issue#> ["resolution"]` |

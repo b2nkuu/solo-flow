@@ -23,7 +23,7 @@ User จัดการงานตัวเองเป็น GitHub Issues ผ
 | "เริ่ม #45", "หยิบงาน auth มาทำ", "let me start on the login task" | `/solo:start <n>` |
 | "ลุย workflow", "auto-run planned ทั้งหมด", "batch ลุย", "implement ทุก planned" | `/solo:start workflow` (เช็คก่อนว่า planned ทุกตัวมี AC + Test Plan + ไม่มี `size:xl`) |
 | "test #45", "verify test plan", "รัน test ของ #45", "ตรวจตาม test plan" | `/solo:test <n>` |
-| "เสร็จ #45", "ปิด login fix", "wrap up #38", "งานนี้จบแล้ว" | `/solo:done <n>` |
+| "เสร็จ #45", "ปิด login fix", "wrap up #38", "งานนี้จบแล้ว" | `/solo:done <n>` (refuses ถ้ามี AC หรือ Test Plan ยัง `- [ ]`; เสนอ `--force` ก็ต่อเมื่อ user ยืนยันว่า item ล้าสมัย) |
 | "ติด #45", "stuck รอ X", "blocked เพราะ Y", "ไปต่อไม่ได้" | `/solo:block <n> "<reason>"` |
 | "กลับมาทำ #45", "unblocked แล้ว", "spec มาแล้ว ทำต่อได้" | `/solo:unblock <n>` |
 | "วาง plan หน่อย", "เคลียร์ inbox", "groom backlog" | `/solo:plan` |
