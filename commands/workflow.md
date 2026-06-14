@@ -197,8 +197,8 @@ Red:
    …
 
 Next:
-- Review and merge green PRs.
-- For red issues: cd into the worktree, fix, /solo:test <n>, /solo:done <n>.
+- Review and merge green PRs (the green pipelines already pushed their branches and opened PRs — no extra branch checkout needed on your side).
+- For red issues: `cd <worktree>` (e.g. `cd .solo/worktrees/<n>`), fix, `/solo:test <n>`, `/solo:done <n>`. The worktree already has the right branch checked out — you don't `git switch` into anything.
 ```
 
 ### 8. Re-run safety
