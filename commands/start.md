@@ -87,9 +87,18 @@ Pre-branch hygiene:
   - Empty → create the branch automatically.
   - Non-empty → ask: `Working tree is dirty. Create branch anyway? [y/N]`. Only proceed on `y`.
 
-Build the branch name:
+Build the branch name. The default `branch.pattern` is `{prefix}/{issue}-{slug}`.
 
-- `{type}` = the type stripped of `type:` prefix (e.g. `feature`).
+- `{prefix}` = resolved from the issue's `type:*` label per the conventional-commits-aligned mapping:
+
+  | type label | prefix |
+  |---|---|
+  | `type:feature` | `feat` |
+  | `type:bug` | `fix` |
+  | `type:task`, `type:idea` | `chore` |
+  | `type:research` | `spike` |
+
+  Five prefixes total: `feat`, `fix`, `chore`, `spike`, plus `release/<version>` reserved for `/solo:release`'s manifest bump branch (see `commands/release.md` step 9). If a future config sets a custom `branch.pattern` with `{type}` instead of `{prefix}`, fall back to the raw type name (legacy behaviour).
 - `{issue}` = the issue number.
 - `{slug}` = the title lowercased, non-alphanumeric → `-`, collapse repeats, trimmed to ~40 chars.
 

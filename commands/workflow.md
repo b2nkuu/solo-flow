@@ -121,7 +121,7 @@ One Workflow call. Pass `{ source: <list>, repo, trunk, claimed_at, workflow }` 
 The orchestrator (script body, **not** an agent) does this synchronously per issue so the flip+branch+worktree creation is one logical step before any agent runs:
 
 1. `gh issue edit <n> --remove-label status:planned --add-label status:in-progress` — atomic ownership flip.
-2. Compute `branch = <type-stripped>/<n>-<slug>` (`{type}` from the `type:*` label, `{slug}` from the title — lowercased, non-alphanumeric → `-`, collapse repeats, trim to ~40 chars).
+2. Compute `branch = <prefix>/<n>-<slug>`. `<prefix>` is resolved from the `type:*` label per the conventional-commits mapping in `commands/start.md` step 5 — `feat` for `type:feature`, `fix` for `type:bug`, `chore` for `type:task`/`type:idea`, `spike` for `type:research`. `<slug>` comes from the title — lowercased, non-alphanumeric → `-`, collapse repeats, trim to ~40 chars.
 3. `worktree_path = <repo>/<workflow.worktree_root>/<n>`.
 4. `git worktree add "<worktree_path>" -b "<branch>" "<trunk>"` — branch + dedicated worktree created off the just-synced trunk.
 5. Fetch the issue body, set `started: <claimed_at>` (the orchestrator-stamped value passed in via `args`, **not** a freshly resolved "today") and `branch: <branch>` in the `<!-- solo:metadata -->` block, `gh issue edit --body-file`.
