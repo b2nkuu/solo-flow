@@ -108,7 +108,7 @@ git pull --ff-only
 
 Fail-fast if trunk can't be brought clean — ask the user before any worktree is created.
 
-Stamp `claimed_at = <today YYYY-MM-DD>` once here. Every pipeline uses this same value for `started:` in metadata so all claimed issues read consistently regardless of agent wall-clock.
+Stamp `claimed_at = <today YYYY-MM-DD>` **once, here, in the orchestrator process** — before any pipeline is spawned. This value is passed into every pipeline via the Workflow `args` (step 6) and is the literal string written to each issue's `started:` metadata in Stage A. Pipelines must **not** re-resolve "today" themselves — agent wall-clock can drift hours behind orchestrator wall-clock under heavy parallelism, and we want all claimed issues to read with the same `started:` date.
 
 ### 6. Invoke the Workflow tool
 
@@ -122,7 +122,7 @@ The orchestrator (script body, **not** an agent) does this synchronously per iss
 2. Compute `branch = <type-stripped>/<n>-<slug>` (`{type}` from the `type:*` label, `{slug}` from the title — lowercased, non-alphanumeric → `-`, collapse repeats, trim to ~40 chars).
 3. `worktree_path = <repo>/<workflow.worktree_root>/<n>`.
 4. `git worktree add "<worktree_path>" -b "<branch>" "<trunk>"` — branch + dedicated worktree created off the just-synced trunk.
-5. Fetch the issue body, set `started: <claimed_at>` and `branch: <branch>` in the `<!-- solo:metadata -->` block, `gh issue edit --body-file`.
+5. Fetch the issue body, set `started: <claimed_at>` (the orchestrator-stamped value passed in via `args`, **not** a freshly resolved "today") and `branch: <branch>` in the `<!-- solo:metadata -->` block, `gh issue edit --body-file`.
 
 If any step in Claim fails for a given issue, that issue's pipeline fails immediately with the partial state recorded. Other pipelines are unaffected.
 
