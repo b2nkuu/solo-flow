@@ -206,11 +206,14 @@ Then update `.solo/config.yml` `milestone.current:` to the new name (or empty st
 | Not on trunk | Stop |
 | Dirty work tree | Stop |
 | Trunk not in sync with origin | Stop |
+| Open PR body has `Closes #<n>` for an issue in the chosen milestone | Stop (list offending PRs) |
 | `milestone.required: true` + unfinished issues in milestone | Stop |
 | `milestone.required: true` + closed issues since last tag without milestone | Stop |
 | `milestone.required: false` + same conditions | Warn, proceed on confirm |
 | `milestone.required: false` | Omit step 9 entirely (no next-milestone prompt, suggest, or config update) |
 | Tag already exists locally or remotely | Stop with hint to pick a new version |
+
+**Notes scope** (Step 5): Release Notes are scoped to the chosen milestone by default — only closed-since-prev-tag issues with `milestone.title == <chosen milestone>` appear. Pass `--include-all-closes` to fall back to the old behavior (every closed-since-prev-tag issue, regardless of milestone). The ⚠ orphan list in the preview is independent of this flag.
 
 ## Notes
 
