@@ -1,6 +1,5 @@
 ---
 description: Run every planned issue end-to-end through an autonomous Workflow (start → implement → test → done + PR)
-argument-hint: ""
 allowed-tools: [Bash, Workflow]
 ---
 
