@@ -141,6 +141,7 @@ Group the remaining issues by `type:*` label:
   Trunk:      <trunk> @ <short-sha>
   Milestone:  <milestone title> (<closed>/<total> closed, will close) | (none)
   Previous:   <prev-tag or "no prior release">
+  Manifest:   <manifest-path> (<current-version> → <next-version>) | (none)
 
 Notes:
   ## Features
@@ -158,6 +159,12 @@ Notes:
 Compute `<closed>` and `<total>` from the counts captured in Step 3 (`closed_issues` and `closed_issues + open_issues`). Example: `Milestone: v0.4 (3/5 closed, will close)`.
 
 The ⚠ block only appears when a milestone was chosen AND there are orphan issues. **Orphan = closed since previous tag AND (`milestone == null` OR `milestone.title != <chosen milestone>`)**. Enumerate orphans independently of the `--include-all-closes` flag — the warning reflects repo hygiene, not what ends up in Notes.
+
+The `Manifest:` line variants:
+
+- No manifest detected → `Manifest:   (none)` (and step 9 will be skipped).
+- Detected, version differs → `Manifest:   <manifest-path> (<current-version> → <next-version>)`.
+- Detected, already at target → `Manifest:   <manifest-path> (already at <next-version> — skip bump)`.
 
 **Block conditions** (stop with error, do not proceed):
 
@@ -180,7 +187,7 @@ If `milestone.required: false`, those become warnings only — proceed.
 
 ### 8. Confirm or dry-run
 
-- `--dry-run` → stop here. Print `(dry-run — nothing pushed.)` and exit.
+- `--dry-run` → the preview above (step 7) already includes the detected manifest path, current version, and target version on the `Manifest:` line. Stop here. Print `(dry-run — nothing pushed. no branch, no commit, no PR, no tag.)` and exit. **No** `feature/release-*` branch is created, no commit is made, no PR is opened, no tag is pushed.
 - Else: `Proceed? [y/N]` — only `y` proceeds.
 
 ### 9. Bump manifest version (skip if no manifest, or already at target)
