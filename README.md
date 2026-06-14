@@ -54,7 +54,8 @@ You don't need `/solo:init` to start capturing — `/solo:capture` works out of 
 |---|---|---|
 | `/solo:capture` | Capture a task or idea to the Inbox | `"text"` |
 | `/solo:today` | Show today's focus list | — |
-| `/solo:start` | Mark in-progress + create branch (single issue), or run every planned issue through a Workflow (`workflow` shape) | `<issue#> \| workflow` |
+| `/solo:start` | Mark in-progress + create branch (single issue) | `<issue#> [--force]` |
+| `/solo:workflow` | Run every planned issue end-to-end through an autonomous Workflow (start → implement → test → done + PR) | — |
 | `/solo:test` | Walk the test plan, run or verify each item, tick passed | `<issue#>` |
 | `/solo:done` | Record outcome + close (refuses on unticked AC/Test Plan unless `--force`) | `<issue#> [--force]` |
 | `/solo:note` | Append a timestamped note | `<issue#> "text"` |
@@ -94,24 +95,25 @@ The sections stay parseable Markdown checkboxes, so the issue page on GitHub dou
 
 This keeps the trunk-based rule "short-lived branches only" honest without adding a separate epic concept.
 
-### Batch workflow
+### Autonomous workflow
 
-When the planned backlog is small but non-trivial — a typical solo sprint — there's no point starting one issue at a time. `/solo:start workflow` (note: no issue number) picks up every `status:planned` issue in `milestone.current` and hands them to a Claude Code Workflow:
+When the planned backlog is small but non-trivial — a typical solo sprint — there's no point driving one issue at a time. `/solo:workflow` picks every `status:planned` issue in `milestone.current` and runs each one end-to-end through its full solo lifecycle in parallel:
 
 ```
-/solo:start workflow
+/solo:workflow
 ```
 
 One pipeline per issue, all in parallel (capped at `workflow.max_parallel`, default 4):
 
-1. **Claim** — atomically flip `status:planned` → `status:in-progress` and create a branch + worktree off trunk. Issues are claimed only as a slot frees up, so killing the workflow mid-batch leaves uncalled issues untouched.
+1. **Claim** — atomically flip `status:planned` → `status:in-progress`, create a `task/<n>-<slug>` branch off trunk, and a dedicated worktree at `.solo/worktrees/<n>/`. Issues are claimed only as a slot frees up, so killing the workflow mid-batch leaves uncalled issues untouched.
 2. **Plan** — derive a subtask list from the issue's `## What` + `## Acceptance` + `## Test Plan`; refuse to proceed unless every Acceptance item is covered.
-3. **Implement** — work the subtasks serially inside the issue's own worktree (no cross-issue file conflicts even when other pipelines run in parallel).
+3. **Implement** — work the subtasks serially inside the issue's own worktree (no cross-issue file conflicts when other pipelines run in parallel).
 4. **Verify** — walk `## Test Plan` like `/solo:test`; tick `[x]` for pass, loop back to Implement (up to `workflow.max_retries`) for fail.
+5. **Done + PR** — tick remaining AC, set `completed`, flip status to `done`, close the issue, push the branch, open a PR back to trunk. The worktree stays at `.solo/worktrees/<n>/` for you to inspect or clean.
 
-Refusals are up front: empty source list, any `size:xl` in the batch, or any issue missing AC / Test Plan → batch aborts before mutating anything. Per-pipeline failures are isolated — one red issue does not kill the others, and successful pipelines leave their worktree + branch ready for `/solo:done <n>`.
+Refusals are up front: empty source list, any `size:xl` in the batch, or any issue missing AC / Test Plan → batch aborts before mutating anything. Per-pipeline failures are isolated — one red issue does not kill the others, the failed issue stays `status:in-progress` with its worktree intact, and the green pipelines still close + PR.
 
-`/solo:start <n>` (single-issue) keeps its original behaviour and never invokes a Workflow.
+`/solo:start <n>` (single-issue) is unaffected — it never runs a Workflow.
 
 ## Configuration
 

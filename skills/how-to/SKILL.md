@@ -30,6 +30,8 @@ solo เปลี่ยน Claude Code เป็น task manager สำหรั
         │                                             │
         ▼                                             │
  /solo:capture ──▶ /solo:plan ──▶ /solo:start ──▶ /solo:note ──▶ /solo:test ──▶ /solo:done
+                              │
+                              └──▶ /solo:workflow (batch ทุก planned end-to-end)
    (Inbox)         (Planned)      (In Progress)   (จด note)      (Verify)       (Closed + PR)
         ▲                              │
         └────────── /solo:today ───────┘
@@ -61,11 +63,11 @@ cd path/to/your-repo
 ```
 `/solo:start` อัพ `trunk`, branch จากตรงนั้น, แล้ว flip status เป็น in-progress.
 
-**Batch ลุยทุก planned ผ่าน Workflow** — ใช้เมื่อ `/solo:plan` วาง backlog เสร็จและพร้อม implement:
+**Batch ลุยทุก planned ผ่าน lifecycle เต็ม** — ใช้เมื่อ `/solo:plan` วาง backlog เสร็จและพร้อมให้ workflow ลุยจบเอง:
 ```
-/solo:start workflow
+/solo:workflow
 ```
-หยิบทุก issue `status:planned` ที่ตรง `milestone.current` (หรือทุกตัวถ้าไม่ set), spawn 1 pipeline ต่อ issue parallel (cap `workflow.max_parallel` default 4). แต่ละ pipeline: claim (flip status + branch + worktree) → plan → implement (ใน worktree แยก, ไม่ชนกัน) → verify Test Plan + loop. Refuse ทันทีถ้า batch ว่าง / มี `size:xl` / มีตัว AC หรือ Test Plan ว่าง. ดู progress ที่ `/workflows`.
+หยิบทุก issue `status:planned` ที่ตรง `milestone.current` (หรือทุกตัวถ้าไม่ set), spawn 1 pipeline ต่อ issue parallel (cap `workflow.max_parallel` default 4). แต่ละ pipeline ทำงาน end-to-end: claim (flip status + branch + worktree ที่ `.solo/worktrees/<n>/`) → plan → implement → verify (loop ถ้า fail) → done (tick AC/TP, close, push, open PR). Refuse ทันทีถ้า batch ว่าง / มี `size:xl` / มีตัว AC หรือ Test Plan ว่าง. ดู progress ที่ `/workflows`. ตัวที่ pipeline fail จะค้าง `status:in-progress` + worktree เหลือไว้ — ลง manual ต่อได้.
 
 **ทำงานอยู่** — จด note ระหว่างทาง โดยเฉพาะ decision:
 ```
@@ -130,7 +132,8 @@ Note ธรรมดาไป comment thread. Note ที่ขึ้น `[decis
 |---|---|---|
 | `/solo:capture` | Capture เข้า Inbox (auto-attach `milestone.current`) | `"text"` |
 | `/solo:today` | Focus วันนี้ + milestone progress | — |
-| `/solo:start` | Flip in-progress + branch (single), หรือ `workflow` (batch ทุก planned) | `<issue#> \| workflow` |
+| `/solo:start` | Flip in-progress + branch (single issue) | `<issue#> [--force]` |
+| `/solo:workflow` | Batch ทุก planned ผ่าน lifecycle เต็ม (start → implement → test → done + PR) | — |
 | `/solo:test` | Walk test plan, run or verify, tick passed items | `<issue#>` |
 | `/solo:done` | Outcome + close + PR (refuses on unticked AC/Test Plan; `--force` override) | `<issue#> [--force]` |
 | `/solo:note` | Append note | `<issue#> "text"` |
