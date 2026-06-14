@@ -100,7 +100,7 @@ release:
 
 milestone:
   current: "v0.1.0"               # active milestone; new issues attach here
-  required: false                 # opt-in: set true to enforce milestone on every issue
+  required: true                  # default-on; set false to allow issues without a milestone
 
 display:
   today_suggested_limit: 5

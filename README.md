@@ -186,24 +186,26 @@ solo treats a release as a **snapshot of trunk** — a git tag plus a GitHub Rel
 3. Generate notes from issues closed since the previous tag, grouped by type (`Features`, `Fixes`, `Other`).
 4. Tag, push, create a GitHub Release, close the chosen milestone, and offer to open the next one.
 
-### Strict mode (opt-in)
+### Strict mode (default)
 
-By default `milestone.required: false` — milestones are optional and `/solo:release` only warns about closed issues that slipped through without one.
+`milestone.required: true` is the default — every issue must carry a milestone, and `/solo:release` blocks if anything in the milestone is unfinished. Solo treats releases as the unit of work; tying issues to a milestone keeps that unit honest.
 
-Flip the flag when you want stricter discipline:
-
-```yaml
-milestone:
-  current: "v0.4"
-  required: true
-```
-
-With `required: true`:
+With `required: true` (default):
 
 - `/solo:capture` refuses to create an issue when no active milestone is set.
 - `/solo:plan` offers a backfill pass for any open issues missing a milestone.
 - `/solo:today` warns loudly about issues without a milestone.
 - `/solo:release` blocks if the milestone still has unfinished issues, or if any closed issue since the last tag has no milestone.
+
+To opt out (looser flow — e.g. a personal scratch repo where you don't cut releases), flip the flag:
+
+```yaml
+milestone:
+  current: "v0.4"
+  required: false
+```
+
+With `required: false`, milestones are optional and `/solo:release` only warns about closed issues that slipped through without one.
 
 ### Migration
 
@@ -211,8 +213,8 @@ If you're upgrading an existing solo project:
 
 1. Re-run `/solo:init` — it adds the `release:` and `milestone:` config blocks without touching the rest.
 2. Create your first milestone: `/solo:plan milestone create v0.1`.
-3. Use `/solo:plan` to backfill milestones on existing open issues.
-4. Flip `milestone.required: true` once your backlog is clean.
+3. Use `/solo:plan` to backfill milestones on existing open issues. Strict mode is on by default — `/solo:plan` will offer a backfill pass for anything missing a milestone.
+4. Flip `milestone.required: false` only if you'd rather skip the discipline (looser flow without releases).
 
 ## Design philosophy
 

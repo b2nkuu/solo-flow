@@ -152,7 +152,7 @@ solo ใช้ [trunk-based development](https://trunkbaseddevelopment.com/):
 - **One issue → one branch → one PR** — ห้ามรวม
 - **Feature flags ดีกว่า branch ยาว** — งานหลายสัปดาห์ใช้ flag gate แล้ว merge เข้า trunk ต่อเนื่อง
 - **Release = tag จาก trunk** — `/solo:release` ตัด tag ตรงจาก trunk. ไม่มี release branch. Hotfix = commit ใหม่บน trunk + patch tag
-- **Milestone group ให้ release** — ทุก issue ผูก `milestone.current` (เปิด strict ผ่าน `milestone.required: true`)
+- **Milestone group ให้ release** — ทุก issue ผูก `milestone.current` (strict mode = default; ปิดผ่าน `milestone.required: false`)
 
 ปรับใน `.solo/config.yml` ที่ `trunk.max_branch_age_days` (default `2`; `0` = ปิด), `release.initial_version`, `milestone.required`.
 

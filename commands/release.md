@@ -22,7 +22,7 @@ Anything else: ignore (no version flags, no `--milestone`, no `--patch` — keep
 
 - `gh auth status` (stop on failure).
 - Resolve repo as usual.
-- Read `.solo/config.yml`: `trunk.name` (default `main`), `release.tag_pattern` (default `v{version}`), `release.initial_version` (default `0.1.0`), `milestone.current`, `milestone.required` (default `false`).
+- Read `.solo/config.yml`: `trunk.name` (default `main`), `release.tag_pattern` (default `v{version}`), `release.initial_version` (default `0.1.0`), `milestone.current`, `milestone.required` (default `true`).
 
 ### 2. Trunk-based invariants
 
