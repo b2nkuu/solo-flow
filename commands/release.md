@@ -50,6 +50,8 @@ All must pass — no overrides:
 - If `milestone.current` is set, fetch it via `gh api repos/<owner/repo>/milestones?state=open` and match by title.
 - If not set or not found in open milestones, list open milestones and let the user pick one (or enter to skip closing a milestone).
 
+Capture the milestone's `number`, `title`, `open_issues`, and `closed_issues` from the API response. Reuse `number` in Step 8 (close API call) and the issue counts in Step 6 (preview progress line) — do **not** re-query the API by title later.
+
 A release without a milestone is allowed (e.g. an emergency patch). Just skip the close-milestone step later.
 
 ### 4. Compute next version
@@ -69,7 +71,7 @@ Always ask:
 Next version (latest: <tag-or-none>, suggest: <suggested>):
 ```
 
-User can accept the suggestion (enter) or type any value. Validate it matches `^v?\d+\.\d+\.\d+$`. Re-ask on bad input.
+User can accept the suggestion (enter) or type any value. Validate it matches `^v?\d+\.\d+\.\d+$` — pre-release suffixes (`-rc1`, `-beta`, etc.) are not accepted. Re-ask on bad input with: `❌ pre-release suffixes not supported. Use plain semver (e.g. v0.4.0).`
 
 Render the final tag using `release.tag_pattern` with `{version}` replaced by the user's input (strip a leading `v` from input first so `v{version}` doesn't double up).
 
@@ -79,14 +81,17 @@ Find issues closed since the previous tag (or since repo start if no previous ta
 
 ```bash
 PREV=<latest tag or empty>
-SINCE=$(git log -1 --format=%cI ${PREV:+$PREV})   # ISO date of prev tag commit, or empty
+SINCE=""
+[ -n "$PREV" ] && SINCE=$(git log -1 --format=%cI "$PREV")   # ISO date of prev tag commit, or empty when no prior tag
 
-# fetch closed issues, then filter by closedAt > SINCE
+# fetch closed issues, then filter by closedAt > SINCE (only when SINCE is non-empty)
 gh issue list --repo <owner/repo> --state closed --limit 500 \
   --json number,title,labels,closedAt,milestone
 ```
 
-In memory: keep issues with `closedAt > SINCE` (or all closed issues if no previous tag). Then **scope to the chosen milestone by default**: keep only issues whose `milestone.title == <chosen milestone>`. If no milestone was chosen in Step 3, keep all closed-since-prev-tag issues (nothing to scope to).
+In memory: if `SINCE` is non-empty, keep issues with `closedAt > SINCE`. If `SINCE` is empty (no previous tag), keep **all** closed issues — the latent bug to avoid is letting `SINCE` default to `HEAD`'s commit date, which would filter every issue out.
+
+Then **scope to the chosen milestone by default**: keep only issues whose `milestone.title == <chosen milestone>`. If no milestone was chosen in Step 3, keep every issue that passed the SINCE filter (nothing to scope to).
 
 If `--include-all-closes` was passed, skip the milestone-scope filter and keep every closed-since-prev-tag issue (previous behavior).
 
@@ -103,7 +108,7 @@ Group the remaining issues by `type:*` label:
 
   Tag:        <new-tag>
   Trunk:      <trunk> @ <short-sha>
-  Milestone:  <milestone title> (will close) | (none)
+  Milestone:  <milestone title> (<closed>/<total> closed, will close) | (none)
   Previous:   <prev-tag or "no prior release">
 
 Notes:
@@ -118,6 +123,8 @@ Notes:
   - #50 chore: bump deps
   - #53 fix typo
 ```
+
+Compute `<closed>` and `<total>` from the counts captured in Step 3 (`closed_issues` and `closed_issues + open_issues`). Example: `Milestone: v0.4 (3/5 closed, will close)`.
 
 The ⚠ block only appears when a milestone was chosen AND there are orphan issues. **Orphan = closed since previous tag AND (`milestone == null` OR `milestone.title != <chosen milestone>`)**. Enumerate orphans independently of the `--include-all-closes` flag — the warning reflects repo hygiene, not what ends up in Notes.
 
@@ -160,11 +167,9 @@ gh release create <new-tag> \
   --notes-file <tempfile>
 ```
 
-If a milestone was chosen, close it:
+If a milestone was chosen, close it using the `number` captured in Step 3 (no re-query by title):
 
 ```bash
-MS_NUMBER=$(gh api "repos/<owner/repo>/milestones?state=open" \
-  --jq '.[] | select(.title=="<milestone>") | .number')
 gh api -X PATCH "repos/<owner/repo>/milestones/$MS_NUMBER" -f state=closed
 ```
 
@@ -178,7 +183,7 @@ Only when `milestone.required: true`, after closing, ask:
 Open next milestone? [Y/n] (suggest: v<next>)
 ```
 
-Suggested name: increment the closed milestone's last numeric segment by one (e.g. `v0.3` → `v0.4`, `v0.3.0` → `v0.4.0`). If no milestone was closed, suggest `release.initial_version`.
+Suggested name: **minor bump** of the closed milestone (e.g. `v0.3` → `v0.4`, `v0.3.0` → `v0.4.0`). Concretely: for `vX.Y` → `vX.(Y+1)`; for `vX.Y.Z` → `vX.(Y+1).0`. Patch milestones (e.g. `v0.3.1`) are not auto-suggested — patch tags belong to the hotfix flow (see Notes) and do not create or close a milestone. If no milestone was closed, suggest `release.initial_version`.
 
 User can accept, type a custom name, or `n` to skip.
 
@@ -217,5 +222,5 @@ Then update `.solo/config.yml` `milestone.current:` to the new name (or empty st
 
 ## Notes
 
-- Solo follows trunk-based development: no release branches. Hotfix = new commit on trunk + new patch tag. If the user asks for a release branch, explain why solo does not support it (link to README's Releases section).
+- Solo follows trunk-based development: no release branches. Hotfix = new commit on trunk + new patch tag. Patch tags (e.g. `v0.3.1`) ship through the hotfix flow and do **not** create or close a milestone — milestones track minor/major scope only (`x.(y+1).0`). If the user asks for a release branch, explain why solo does not support it (link to README's Releases section).
 - Never `git push --force`. Never delete tags.
