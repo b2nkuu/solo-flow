@@ -50,6 +50,8 @@ All must pass — no overrides:
 - If `milestone.current` is set, fetch it via `gh api repos/<owner/repo>/milestones?state=open` and match by title.
 - If not set or not found in open milestones, list open milestones and let the user pick one (or enter to skip closing a milestone).
 
+Capture the milestone's `number`, `title`, `open_issues`, and `closed_issues` from the API response. Reuse `number` in Step 8 (close API call) and the issue counts in Step 6 (preview progress line) — do **not** re-query the API by title later.
+
 A release without a milestone is allowed (e.g. an emergency patch). Just skip the close-milestone step later.
 
 ### 4. Compute next version
@@ -106,7 +108,7 @@ Group the remaining issues by `type:*` label:
 
   Tag:        <new-tag>
   Trunk:      <trunk> @ <short-sha>
-  Milestone:  <milestone title> (will close) | (none)
+  Milestone:  <milestone title> (<closed>/<total> closed, will close) | (none)
   Previous:   <prev-tag or "no prior release">
 
 Notes:
@@ -121,6 +123,8 @@ Notes:
   - #50 chore: bump deps
   - #53 fix typo
 ```
+
+Compute `<closed>` and `<total>` from the counts captured in Step 3 (`closed_issues` and `closed_issues + open_issues`). Example: `Milestone: v0.4 (3/5 closed, will close)`.
 
 The ⚠ block only appears when a milestone was chosen AND there are orphan issues. **Orphan = closed since previous tag AND (`milestone == null` OR `milestone.title != <chosen milestone>`)**. Enumerate orphans independently of the `--include-all-closes` flag — the warning reflects repo hygiene, not what ends up in Notes.
 
@@ -163,11 +167,9 @@ gh release create <new-tag> \
   --notes-file <tempfile>
 ```
 
-If a milestone was chosen, close it:
+If a milestone was chosen, close it using the `number` captured in Step 3 (no re-query by title):
 
 ```bash
-MS_NUMBER=$(gh api "repos/<owner/repo>/milestones?state=open" \
-  --jq '.[] | select(.title=="<milestone>") | .number')
 gh api -X PATCH "repos/<owner/repo>/milestones/$MS_NUMBER" -f state=closed
 ```
 
