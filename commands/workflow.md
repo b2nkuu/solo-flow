@@ -35,13 +35,15 @@ For a single issue you want to drive yourself, use `/solo:start <n>` instead. `/
   milestone:
     current: "<name>"           # source filter
   workflow:
-    max_parallel: 4              # cap concurrent pipelines (per-issue)
+    max_parallel: 4              # script-level soft cap on concurrent pipelines (see note)
     max_retries: 3               # implement→verify loop cap per issue
     worktree_root: ".solo/worktrees"   # relative to repo root
     plan_model: sonnet           # optional model overrides
     implement_model: sonnet
     verify_model: haiku
   ```
+
+  **About `workflow.max_parallel`:** this is the **script-level soft cap** — the upper bound the orchestrator asks the Workflow tool to honour when scheduling pipelines. It is **distinct** from the Workflow runtime's own hard ceiling, which is roughly `min(16, cores - 2)` and applied unconditionally by the runtime regardless of what the script requests. The effective concurrency is `min(workflow.max_parallel, min(16, cores - 2), N)` where `N` is the source list size. Set `workflow.max_parallel` low to throttle yourself below the runtime cap (e.g. on a small laptop, or to leave headroom for other tools). Setting it above the runtime cap has no effect — the runtime cap wins.
 
 ### 2. Build the source list
 
@@ -70,7 +72,7 @@ Every refusal aborts the whole batch — no partial flips, no partial branches, 
      …
      Break them down with /solo:plan first.
   ```
-- Any issue's body has no real Acceptance or Test Plan content (the section is missing, or contains only the single empty `- [ ]` placeholder — same heuristic as `/solo:done` step 3) → list them and stop:
+- Any issue's body has no real Acceptance or Test Plan content — a section is "missing" only when the heading is absent **or** the section's only checklist line is the single empty `- [ ]` placeholder (same skippable heuristic as `/solo:done` step 3). A section with at least one real `- [ ]` or `- [x]` item counts as present. → list them and stop:
   ```
   ⚠ Missing AC or Test Plan:
      #<n> <title> (no AC)
@@ -88,13 +90,13 @@ Show the batch and ask once:
    #<n1> [<priority>][<size>] <title>
    #<n2> [<priority>][<size>] <title>
    …
-   parallel: <min(N, workflow.max_parallel)>   retries: <workflow.max_retries>
+   parallel: <min(N, workflow.max_parallel)>   retries: <workflow.max_retries>   (runtime may further cap at min(16, cores-2))
    milestone filter: <milestone.current or "none">
    worktree root: <repo>/<workflow.worktree_root>
 Start? [y/N]
 ```
 
-Anything other than `y` (case-insensitive) → abort.
+Anything other than `y` (case-insensitive) → abort. The batch confirm is strict — Thai/informal tokens like `ครับ` / `ใช่` are **not** accepted here (the assistant skill's softer confirm vocabulary applies to skill-mediated conversations, not to this command's prompt).
 
 ### 5. Sync trunk
 
@@ -108,7 +110,7 @@ git pull --ff-only
 
 Fail-fast if trunk can't be brought clean — ask the user before any worktree is created.
 
-Stamp `claimed_at = <today YYYY-MM-DD>` once here. Every pipeline uses this same value for `started:` in metadata so all claimed issues read consistently regardless of agent wall-clock.
+Stamp `claimed_at = <today YYYY-MM-DD>` **once, here, in the orchestrator process** — before any pipeline is spawned. This value is passed into every pipeline via the Workflow `args` (step 6) and is the literal string written to each issue's `started:` metadata in Stage A. Pipelines must **not** re-resolve "today" themselves — agent wall-clock can drift hours behind orchestrator wall-clock under heavy parallelism, and we want all claimed issues to read with the same `started:` date.
 
 ### 6. Invoke the Workflow tool
 
@@ -122,7 +124,7 @@ The orchestrator (script body, **not** an agent) does this synchronously per iss
 2. Compute `branch = <type-stripped>/<n>-<slug>` (`{type}` from the `type:*` label, `{slug}` from the title — lowercased, non-alphanumeric → `-`, collapse repeats, trim to ~40 chars).
 3. `worktree_path = <repo>/<workflow.worktree_root>/<n>`.
 4. `git worktree add "<worktree_path>" -b "<branch>" "<trunk>"` — branch + dedicated worktree created off the just-synced trunk.
-5. Fetch the issue body, set `started: <claimed_at>` and `branch: <branch>` in the `<!-- solo:metadata -->` block, `gh issue edit --body-file`.
+5. Fetch the issue body, set `started: <claimed_at>` (the orchestrator-stamped value passed in via `args`, **not** a freshly resolved "today") and `branch: <branch>` in the `<!-- solo:metadata -->` block, `gh issue edit --body-file`.
 
 If any step in Claim fails for a given issue, that issue's pipeline fails immediately with the partial state recorded. Other pipelines are unaffected.
 
@@ -197,8 +199,8 @@ Red:
    …
 
 Next:
-- Review and merge green PRs.
-- For red issues: cd into the worktree, fix, /solo:test <n>, /solo:done <n>.
+- Review and merge green PRs (the green pipelines already pushed their branches and opened PRs — no extra branch checkout needed on your side).
+- For red issues: `cd <worktree>` (e.g. `cd .solo/worktrees/<n>`), fix, `/solo:test <n>`, `/solo:done <n>`. The worktree already has the right branch checked out — you don't `git switch` into anything.
 ```
 
 ### 8. Re-run safety
