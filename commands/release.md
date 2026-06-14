@@ -155,7 +155,9 @@ gh api -X PATCH "repos/<owner/repo>/milestones/$MS_NUMBER" -f state=closed
 
 ### 9. Open the next milestone
 
-After closing, ask:
+**Skip this entire step (no prompt, no suggest, no config update) when `milestone.required: false`.** Soft-milestone flow treats milestones as optional, so auto-suggesting the next one feels like coercion. Step 10 will also omit the "Next milestone:" line accordingly.
+
+Only when `milestone.required: true`, after closing, ask:
 
 ```
 Open next milestone? [Y/n] (suggest: v<next>)
@@ -179,7 +181,7 @@ Then update `.solo/config.yml` `milestone.current:` to the new name (or empty st
 🚀 Released <new-tag>
    URL: <release URL from gh>
    Closed milestone: <name>           (omit line if none)
-   Next milestone: <name> (current)   (omit line if skipped)
+   Next milestone: <name> (current)   (omit line if skipped OR if step 9 was skipped because milestone.required: false)
 ```
 
 ## Guards summary
@@ -192,6 +194,7 @@ Then update `.solo/config.yml` `milestone.current:` to the new name (or empty st
 | `milestone.required: true` + unfinished issues in milestone | Stop |
 | `milestone.required: true` + closed issues since last tag without milestone | Stop |
 | `milestone.required: false` + same conditions | Warn, proceed on confirm |
+| `milestone.required: false` | Omit step 9 entirely (no next-milestone prompt, suggest, or config update) |
 | Tag already exists locally or remotely | Stop with hint to pick a new version |
 
 ## Notes
