@@ -19,7 +19,7 @@ If `$ARGUMENTS` starts with `milestone`, jump to the **Milestone sub-command** s
 
 - `gh auth status` (stop on failure).
 - Resolve repo as usual.
-- Read `.solo/config.yml`: `milestone.current` (string) and `milestone.required` (default `false`).
+- Read `.solo/config.yml`: `milestone.current` (string) and `milestone.required` (default `true`).
 
 ### 2. Fetch inbox
 

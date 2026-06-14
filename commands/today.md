@@ -13,7 +13,7 @@ Show a focused, scannable list of what to work on today.
 
 - Run `gh auth status`. On failure: stop, tell user to run `gh auth login`.
 - Resolve repo: `.solo/config.yml` `repo:` field → fallback `gh repo view --json nameWithOwner -q .nameWithOwner` → ask user.
-- Read `display.today_suggested_limit` (default `5`), `milestone.current`, and `milestone.required` (default `false`) from `.solo/config.yml`.
+- Read `display.today_suggested_limit` (default `5`), `milestone.current`, and `milestone.required` (default `true`) from `.solo/config.yml`.
 
 ### 2. Fetch open issues
 

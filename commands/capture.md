@@ -103,9 +103,9 @@ branch:
 
 Preserve the `<!-- solo:metadata ... -->` comment exactly as shown — other commands parse it.
 
-### 6. Resolve milestone (optional)
+### 6. Resolve milestone
 
-Read `.solo/config.yml`: `milestone.current` (string) and `milestone.required` (default `false`). If config is missing, treat both as unset/false.
+Read `.solo/config.yml`: `milestone.current` (string) and `milestone.required` (default `true`). If config is missing, treat `milestone.current` as unset and `milestone.required` as `true` — the default applies even pre-init, so a misconfigured repo fails fast rather than silently capturing orphan issues.
 
 If `milestone.current` is non-empty:
 
@@ -117,9 +117,10 @@ If `milestone.current` is non-empty:
 
 **No milestone** branch:
 
-- `milestone.required: true` → block:
+- `milestone.required: true` (default) → block:
   ```
-  ❌ No active milestone. Set one with /solo:plan or edit .solo/config.yml milestone.current.
+  ❌ No active milestone. Set one with /solo:plan milestone create <name>,
+     or set milestone.required: false in .solo/config.yml to allow milestone-less issues.
   ```
   Stop without creating the issue.
 - `milestone.required: false` → proceed without a milestone (no prompt — keep capture fast).
