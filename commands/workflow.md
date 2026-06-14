@@ -35,13 +35,15 @@ For a single issue you want to drive yourself, use `/solo:start <n>` instead. `/
   milestone:
     current: "<name>"           # source filter
   workflow:
-    max_parallel: 4              # cap concurrent pipelines (per-issue)
+    max_parallel: 4              # script-level soft cap on concurrent pipelines (see note)
     max_retries: 3               # implement→verify loop cap per issue
     worktree_root: ".solo/worktrees"   # relative to repo root
     plan_model: sonnet           # optional model overrides
     implement_model: sonnet
     verify_model: haiku
   ```
+
+  **About `workflow.max_parallel`:** this is the **script-level soft cap** — the upper bound the orchestrator asks the Workflow tool to honour when scheduling pipelines. It is **distinct** from the Workflow runtime's own hard ceiling, which is roughly `min(16, cores - 2)` and applied unconditionally by the runtime regardless of what the script requests. The effective concurrency is `min(workflow.max_parallel, min(16, cores - 2), N)` where `N` is the source list size. Set `workflow.max_parallel` low to throttle yourself below the runtime cap (e.g. on a small laptop, or to leave headroom for other tools). Setting it above the runtime cap has no effect — the runtime cap wins.
 
 ### 2. Build the source list
 
@@ -88,7 +90,7 @@ Show the batch and ask once:
    #<n1> [<priority>][<size>] <title>
    #<n2> [<priority>][<size>] <title>
    …
-   parallel: <min(N, workflow.max_parallel)>   retries: <workflow.max_retries>
+   parallel: <min(N, workflow.max_parallel)>   retries: <workflow.max_retries>   (runtime may further cap at min(16, cores-2))
    milestone filter: <milestone.current or "none">
    worktree root: <repo>/<workflow.worktree_root>
 Start? [y/N]
