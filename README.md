@@ -67,6 +67,7 @@ You don't need `/solo:init` to start capturing — `/solo:capture` works out of 
 | `/solo:week` | Past 7 days summary | — |
 | `/solo:status` | Project snapshot | — |
 | `/solo:init` | Idempotent setup (labels + config) | — |
+| `/solo:cleanup` | Sweep stale local branches + worktrees whose issue is closed / PR was merged | — |
 
 ## How it models work
 

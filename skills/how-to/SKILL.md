@@ -112,6 +112,12 @@ Note ธรรมดาไป comment thread. Note ที่ขึ้น `[decis
 /solo:status
 ```
 
+**Cleanup stale branches/worktrees** — หลัง merge หลาย PR + `/solo:today` ขึ้น hint `ℹ N stale local branches`:
+```
+/solo:cleanup
+```
+Sweep local branches + worktrees ที่ issue ปิดแล้ว / PR merged. Worktree-first delete (กัน `fatal: branch is checked out`). Dirty worktree skip — ไม่ force. Remote branches อยู่นอก scope (`gh pr merge --delete-branch` ตอน merge เป็นคนทำ).
+
 **Cut a release** — tag จาก trunk, generate notes, close milestone:
 ```
 /solo:release --dry-run     # preview ก่อน
@@ -145,6 +151,7 @@ Note ธรรมดาไป comment thread. Note ที่ขึ้น `[decis
 | `/solo:week` | 7 วันที่ผ่านมา | — |
 | `/solo:status` | Snapshot | — |
 | `/solo:init` | Setup (idempotent) | — |
+| `/solo:cleanup` | Sweep stale local branches + worktrees (issue closed / PR merged) | — |
 
 ## Trunk-based principles (ฝังไว้ใน plugin)
 

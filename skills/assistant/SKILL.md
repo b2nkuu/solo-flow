@@ -22,6 +22,7 @@ User จัดการงานตัวเองเป็น GitHub Issues ผ
 | "วันนี้ทำอะไรดี", "next ทำอะไร", "today's list", "ดูงานหน่อย" | `/solo:today` |
 | "เริ่ม #45", "หยิบงาน auth มาทำ", "let me start on the login task" | `/solo:start <n>` |
 | "ลุย workflow", "auto-run planned ทั้งหมด", "batch ลุย", "implement ทุก planned", "auto ship ทั้ง backlog" | `/solo:workflow` (เช็คก่อนว่า planned ทุกตัวมี AC + Test Plan + ไม่มี `size:xl`; pipeline ทำ start→implement→test→done+PR เต็ม lifecycle ต่อ issue) |
+| "เคลียร์ branch เก่า", "ลบ branch ที่ merge แล้ว", "branch ค้างเยอะ", "clean worktrees", "tidy up branches" | `/solo:cleanup` (sweep stale local branches + worktrees, dirty worktree skip) |
 | "test #45", "verify test plan", "รัน test ของ #45", "ตรวจตาม test plan" | `/solo:test <n>` |
 | "เสร็จ #45", "ปิด login fix", "wrap up #38", "งานนี้จบแล้ว" | `/solo:done <n>` (refuses ถ้ามี AC หรือ Test Plan ยัง `- [ ]`; เสนอ `--force` ก็ต่อเมื่อ user ยืนยันว่า item ล้าสมัย) |
 | "ติด #45", "stuck รอ X", "blocked เพราะ Y", "ไปต่อไม่ได้" | `/solo:block <n> "<reason>"` |
